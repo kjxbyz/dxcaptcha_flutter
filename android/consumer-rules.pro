@@ -1,0 +1,11 @@
+# 顶象验证码 SDK 混淆规则（来自官方接入文档）
+-keep class com.dx.mobile.captcha.**{*;}
+-keep class com.dingxiang.mobile.captcha.**{*;}
+-keep class org.json.**{*;}
+-dontwarn com.dx.mobile.**
+-dontwarn *.com.dx.mobile.**
+-dontwarn *.com.mobile.strenc.**
+-keep class com.dx.mobile.risk.**{*;}
+-keep class com.security.inner.**{*;}
+-keep class *.com.dx.mobile.**{*;}
+-keep class *.com.mobile.strenc.**{*;}

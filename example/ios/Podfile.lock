@@ -1,0 +1,28 @@
+PODS:
+  - dxcaptcha_flutter (0.1.0):
+    - Flutter
+  - Flutter (1.0.0)
+  - integration_test (0.0.1):
+    - Flutter
+
+DEPENDENCIES:
+  - dxcaptcha_flutter (from `/Users/kimmy/workbuddy-work/dxcaptcha_flutter/ios`)
+  - Flutter (from `/Users/kimmy/workbuddy-work/dxcaptcha_flutter/example/ios/Flutter`)
+  - integration_test (from `/Users/kimmy/fvm/versions/3.35.7/packages/integration_test/ios`)
+
+EXTERNAL SOURCES:
+  dxcaptcha_flutter:
+    :path: "/Users/kimmy/workbuddy-work/dxcaptcha_flutter/ios"
+  Flutter:
+    :path: "/Users/kimmy/workbuddy-work/dxcaptcha_flutter/example/ios/Flutter"
+  integration_test:
+    :path: "/Users/kimmy/fvm/versions/3.35.7/packages/integration_test/ios"
+
+SPEC CHECKSUMS:
+  dxcaptcha_flutter: 52ce77555e40888fe7c507dfa9da559236a73b7a
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  integration_test: 4a889634ef21a45d28d50d622cf412dc6d9f586e
+
+PODFILE CHECKSUM: 6da0f54affa2c78f01ebe583f0a89ce3a71df960
+
+COCOAPODS: 1.17.0
