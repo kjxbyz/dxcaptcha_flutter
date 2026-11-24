@@ -1,7 +1,7 @@
 name: dxcaptcha_flutter
 description: "顶象无感验证码（DingXiang Captcha）Flutter 插件，支持 iOS / Android / Web，提供嵌入 Widget 与弹窗两种接入方式。"
-version: 0.1.0
-homepage: https://www.dingxiang-inc.com/docs/detail/captcha
+version: 0.0.2-dev.0
+homepage: https://github.com/kjxbyz/dxcaptcha_flutter
 
 environment:
   sdk: ^3.9.0
