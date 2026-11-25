@@ -137,6 +137,12 @@ static NSDictionary<NSString *, id> *DxCaptchaSanitizePayload(
   result(FlutterMethodNotImplemented);
 }
 
+/// 顶象验证码（DXCaptchaViewV5）原生设计尺寸 362x335，与官方 iOS Demo 的
+/// 弹窗示例一致（width=362, height=362/(362/335)）。WebView 必须按该尺寸
+/// 承载内容，容器不足时整体等比缩放，容器更大时居中放置。
+static const CGFloat kDxCaptchaNativeWidth = 362.0;
+static const CGFloat kDxCaptchaNativeHeight = 335.0;
+
 /// 创建（或重建）验证码视图。
 - (void)createCaptchaView {
   if (_disposed) {
@@ -152,28 +158,65 @@ static NSDictionary<NSString *, id> *DxCaptchaSanitizePayload(
     return;
   }
 
-  NSDictionary *config = DxCaptchaFilterConfig(_config);
+  NSMutableDictionary *config =
+      [DxCaptchaFilterConfig(_config) mutableCopy];
+  // protocol 在 SDK v5.4.21 以下为必填项（官方文档），未提供时 SDK 可能按 http
+  // 发起请求被 ATS 拦截，前端 JS 资源加载失败并触发 load_fail 事件（白屏）。
+  // 插件内置的 dx-captcha 为 v5.4.18r，因此这里默认补齐 https。
+  if (config[@"protocol"] == nil) {
+    config[@"protocol"] = @"https:";
+  }
   NSString *appId = config[@"appId"];
   if (![appId isKindOfClass:[NSString class]] || appId.length == 0) {
     [self sendError:@"init_failed" message:@"appId 不能为空"];
     return;
   }
 
-  CGRect frame = _container.bounds;
-  if (CGRectGetWidth(frame) < 1 || CGRectGetHeight(frame) < 1) {
-    frame = CGRectMake(0, 0, 362, 335);
+  // SDK 通过 mainBundle 查找 DXCaptcha.bundle（验证码前端资源），
+  // 缺失时 WKWebView 加载空白页，表现为白屏。提前拦截给出可诊断的错误。
+  if ([NSBundle.mainBundle pathForResource:@"DXCaptcha" ofType:@"bundle"] == nil) {
+    [self sendError:@"sdk_resource_missing"
+             message:@"未找到 DXCaptcha.bundle：请确认 podspec 的 resources 已包含"
+                        " Frameworks/DXCaptcha.bundle，并重新 pod install"];
+    return;
   }
 
-  DXCaptchaViewV5 *captchaView =
-      [[DXCaptchaViewV5 alloc] initWithConfig:config delegate:self frame:frame];
+  CGFloat containerWidth = CGRectGetWidth(_container.bounds);
+  CGFloat containerHeight = CGRectGetHeight(_container.bounds);
+  if (containerWidth < 1 || containerHeight < 1) {
+    containerWidth = kDxCaptchaNativeWidth;
+    containerHeight = kDxCaptchaNativeHeight;
+  }
+
+  // WebView 恒定按原生设计尺寸 362x335 布局；容器更窄时整体等比缩放，
+  // 缩放围绕视图中心进行，因此 frame 的中心要对齐容器中心（除以 scale
+  // 折算回未缩放坐标系）。
+  CGFloat scale = MIN(1.0, containerWidth / kDxCaptchaNativeWidth);
+  CGFloat originX = (containerWidth / scale - kDxCaptchaNativeWidth) / 2;
+  CGFloat originY = (containerHeight / scale - kDxCaptchaNativeHeight) / 2;
+
+  DXCaptchaViewV5 *captchaView = [[DXCaptchaViewV5 alloc]
+      initWithConfig:config
+            delegate:self
+               frame:CGRectMake(originX, originY,
+                                kDxCaptchaNativeWidth, kDxCaptchaNativeHeight)];
 
   if (captchaView == nil) {
     [self sendError:@"init_failed" message:@"DXCaptchaViewV5 初始化失败"];
     return;
   }
 
-  captchaView.autoresizingMask =
-      UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+  if (scale < 1.0) {
+    captchaView.transform = CGAffineTransformMakeScale(scale, scale);
+    captchaView.autoresizingMask = UIViewAutoresizingNone;
+  } else {
+    // 容器更大时保持 362x335 原生尺寸，四边留白均分保持居中。
+    captchaView.autoresizingMask =
+        UIViewAutoresizingFlexibleLeftMargin |
+        UIViewAutoresizingFlexibleTopMargin |
+        UIViewAutoresizingFlexibleRightMargin |
+        UIViewAutoresizingFlexibleBottomMargin;
+  }
   captchaView.backgroundColor = [UIColor clearColor];
   captchaView.opaque = NO;
 

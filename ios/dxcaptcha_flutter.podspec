@@ -25,6 +25,13 @@ Pod::Spec.new do |s|
   s.dependency 'Flutter'
   s.platform = :ios, '15.0'
 
+  # 关键：必须为 static framework。
+  # 顶象 SDK 通过 [NSBundle mainBundle] 在 app 包根目录查找 DXCaptcha.bundle，
+  # dynamic framework pod 会把 resources 打进自身 framework 包内导致 SDK 找不到
+  # 资源（WebView 加载空白 → 白屏）；static pod 的 resources 会被 CocoaPods
+  # 直接拷贝到 app bundle 根目录，与官方接入方式一致。
+  s.static_framework = true
+
   # 顶象 SDK：xcframework 提供切片二进制，bundle 提供验证码前端资源。
   #
   # Flutter 通过 .symlinks/plugins 符号链接引入本地插件，CocoaPods 解析

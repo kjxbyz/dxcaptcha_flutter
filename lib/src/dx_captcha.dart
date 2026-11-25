@@ -315,7 +315,9 @@ class _DxCaptchaDialogState extends State<_DxCaptchaDialog> {
     return Dialog(
       backgroundColor: isDark ? const Color(0xFF1F1F23) : Colors.white,
       surfaceTintColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      // 验证码前端固定按 330px 宽渲染（官方 FAQ），这里左右各留 16，
+      // 保证最小机型（375pt 屏宽）下容器仍有 343pt ≥ 330pt，避免内容溢出。
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(
@@ -378,12 +380,16 @@ class _DxCaptchaDialogState extends State<_DxCaptchaDialog> {
                   ),
                 ),
               const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(
-                  '取消',
-                  style: TextStyle(
-                    color: isDark ? Colors.white54 : Colors.black45,
+              // 取消按钮铺满弹窗整行，与验证码区域宽度对齐。
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(
+                    '取消',
+                    style: TextStyle(
+                      color: isDark ? Colors.white54 : Colors.black45,
+                    ),
                   ),
                 ),
               ),

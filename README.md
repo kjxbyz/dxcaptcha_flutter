@@ -286,6 +286,28 @@ That is the degraded token issued when the front end cannot reach the network, m
 device cannot connect to `apiServer` directly. Check connectivity or the private domain
 configuration.
 
+**iOS shows a blank (white) CAPTCHA area**
+The DingXiang SDK loads `DXCaptcha.bundle` from the app bundle root
+(`[NSBundle mainBundle]`). If the bundle is missing the WKWebView loads an
+empty page and the area stays white. Verify the bundle exists in the built
+app:
+
+```bash
+ls build/ios/iphoneos/Runner.app/DXCaptcha.bundle
+```
+
+If it is missing (e.g. it ended up inside
+`Frameworks/dxcaptcha_flutter.framework/`), the plugin podspec must declare
+`static_framework = true` (already set) — then re-run `pod install` and
+rebuild. The plugin also reports `sdk_resource_missing` when the bundle is
+absent, so check the error log for a faster diagnosis.
+
+Another common trigger of the `load_fail` event is a missing `protocol`
+config: it is required for iOS SDK versions below v5.4.21 (the bundled SDK is
+v5.4.18r); without it the SDK may request resources over `http`, which gets
+blocked by ATS. The plugin injects `https:` by default; override it via
+`extra: {'protocol': 'https:'}` if needed.
+
 **iOS linker error `Undefined symbol: _OBJC_CLASS_$_DXCaptchaViewV5`**
 See "Path fix for symlinked plugins" above.
 

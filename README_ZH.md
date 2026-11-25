@@ -282,6 +282,23 @@ fvm flutter run -d chrome # Web
 这是前端网络不通时的降级 token，说明设备无法直连 `apiServer`，需要检查网络或
 私有化域名配置。
 
+**iOS 验证码区域白屏**
+顶象 SDK 通过 `[NSBundle mainBundle]`（app 包根目录）加载 `DXCaptcha.bundle`。
+bundle 缺失时 WKWebView 加载空白页，表现为白屏。检查构建产物中 bundle 是否存在：
+
+```bash
+ls build/ios/iphoneos/Runner.app/DXCaptcha.bundle
+```
+
+如果 bundle 缺失（例如被打进了 `Frameworks/dxcaptcha_flutter.framework/` 内部），
+需要插件 podspec 声明 `static_framework = true`（已默认设置），然后重新执行
+`pod install` 并重新构建。bundle 缺失时插件会上报 `sdk_resource_missing` 错误，
+可通过日志快速定位。
+
+另一个触发 `load_fail` 的常见原因是 `protocol` 未配置：iOS SDK（v5.4.18r）低于
+v5.4.21 时该参数必填，缺失时 SDK 可能按 `http` 请求资源被 ATS 拦截。插件已自动
+注入默认值 `https:`，如需覆盖可通过 `extra: {'protocol': 'https:'}` 传入。
+
 **iOS 链接报 `Undefined symbol: _OBJC_CLASS_$_DXCaptchaViewV5`**
 见上文「符号链接插件的路径修正」。
 

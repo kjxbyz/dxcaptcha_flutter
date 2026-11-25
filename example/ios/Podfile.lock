@@ -6,23 +6,23 @@ PODS:
     - Flutter
 
 DEPENDENCIES:
-  - dxcaptcha_flutter (from `/Users/kimmy/workbuddy-work/dxcaptcha_flutter/ios`)
-  - Flutter (from `/Users/kimmy/workbuddy-work/dxcaptcha_flutter/example/ios/Flutter`)
-  - integration_test (from `/Users/kimmy/fvm/versions/3.35.7/packages/integration_test/ios`)
+  - dxcaptcha_flutter (from `.symlinks/plugins/dxcaptcha_flutter/ios`)
+  - Flutter (from `Flutter`)
+  - integration_test (from `.symlinks/plugins/integration_test/ios`)
 
 EXTERNAL SOURCES:
   dxcaptcha_flutter:
-    :path: "/Users/kimmy/workbuddy-work/dxcaptcha_flutter/ios"
+    :path: ".symlinks/plugins/dxcaptcha_flutter/ios"
   Flutter:
-    :path: "/Users/kimmy/workbuddy-work/dxcaptcha_flutter/example/ios/Flutter"
+    :path: Flutter
   integration_test:
-    :path: "/Users/kimmy/fvm/versions/3.35.7/packages/integration_test/ios"
+    :path: ".symlinks/plugins/integration_test/ios"
 
 SPEC CHECKSUMS:
-  dxcaptcha_flutter: 52ce77555e40888fe7c507dfa9da559236a73b7a
+  dxcaptcha_flutter: b8b67872d4e57efefcbc982a81eb531222a16ecb
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   integration_test: 4a889634ef21a45d28d50d622cf412dc6d9f586e
 
-PODFILE CHECKSUM: 6da0f54affa2c78f01ebe583f0a89ce3a71df960
+PODFILE CHECKSUM: f5883ba9eb3ae50ed75c04b688f38bf3e547a350
 
 COCOAPODS: 1.17.0
