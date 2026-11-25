@@ -1,4 +1,4 @@
-package com.pcxx.dxcaptcha_flutter
+package com.kjxbyz.plugins.dxcaptcha_flutter
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 

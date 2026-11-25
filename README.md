@@ -23,7 +23,7 @@ all platforms.
 | Private `apiServer` | ✅  | ✅      | ✅  | —           |
 
 - iOS: `dx-captcha.xcframework` v5.4.18r (bundled with the plugin)
-- Android: download `dx-captcha-*.aar` yourself and put it in `android/libs/`
+- Android: `dx-captcha-without-risk-v5.4.27r.aar` bundled; minimal mode by default (no risk SDK)
 - Web: the v5 JS SDK is loaded automatically from the DingXiang CDN — no manual `<script>` needed
 
 ## Requirements
@@ -88,30 +88,56 @@ target's **Copy Bundle Resources** as well.
 
 ### Android
 
-DingXiang does not publish to a public Maven repository, so download the aar from the console:
-
-1. Sign in to the DingXiang console → 无感验证 (frictionless CAPTCHA) → SDK download
-2. Put `dx-captcha-without-risk-vX.X.X.aar` (recommended, no device fingerprinting) into
-   `dxcaptcha_flutter/android/libs/`
-3. Rebuild — Gradle picks it up automatically through `fileTree`
+The CAPTCHA SDK ships with the plugin, running in the official "minimal usage" mode by
+default (**no device fingerprint / risk SDK integrated**):
 
 ```
 dxcaptcha_flutter/
 └── android/libs/
     ├── README.md
-    └── dx-captcha-without-risk-v5.4.27.aar   ← put it here
+    └── dx-captcha-without-risk-v5.4.27r.aar   # CAPTCHA SDK
 ```
+
+> **About "without-risk" and the risk SDK**
+> Verified by decompiling: "without-risk" only means the risk SDK is not packaged inside
+> and must be provided by the integrator. When `DXKeyRiskEnable` defaults to true, the
+> bytecode of `startToLoad`, `setAllowPrivacyList` and the token path call
+> `com.dx.mobile.risk.DXRisk` directly — without that class they throw
+> `NoClassDefFoundError`.
+> The plugin follows the official minimal-usage config and disables risk by default:
+> with `enableRiskSdk: false` it passes `DXKeyRiskEnable=false` (do not load the
+> fingerprint SDK) and `wait_for_const_id_sdk=false` (tell the server not to wait for the
+> fingerprint), and skips `setAllowPrivacyList` (also omitted in the official minimal
+> example). No risk-related dependency is needed in this mode. The trade-off is losing
+> the security hardening provided by device fingerprinting.
+
+To enable risk hardening:
+
+1. Set `DxCaptchaConfig(enableRiskSdk: true)` on the Dart side
+2. Put `dx-risk-v*.aar` from the official demo package (version-matched) into `android/libs/`
+3. Run `flutter clean && flutter build`; collection scope is controlled by `privacy`
+   (`minimal` maps to `PrivacyFlag.DEFALUT=0`), and declare the risk SDK in your privacy
+   policy per DingXiang's compliance guide
+
+To switch versions, replace the aars under `android/libs/` and run
+`flutter clean && flutter build` — Gradle unpacks them into classes.jar / assets / jniLibs
+at configuration time (AGP forbids library modules from depending on local aar files
+directly; see `android/build.gradle.kts`). The fingerprinted `dx-captcha-v*.aar` (which
+bundles dx-risk itself) works the same way — keep `enableRiskSdk: true` in that case.
 
 The plugin already includes:
 
 - `INTERNET` / `ACCESS_NETWORK_STATE` permissions
 - DingXiang's official ProGuard rules (`android/consumer-rules.pro`)
-- A reflection-based wrapper around the SDK, so the build does not break when the aar is
-  absent — instead the Dart side receives a readable `sdk_unavailable` error
+- A reflection bridge aligned with the official docs: `DXCaptchaViewV5.init(appId)` +
+  `startToLoad(listener, "success", "fail")`; when `enableRiskSdk: true`,
+  `setAllowPrivacyList` is called before init (`PrivacyFlag.DEFALUT=0` / `ALL=-1`)
+- Builds fine even without the aar — the Dart side just receives a readable
+  `sdk_unavailable` error
 
-> If your aar uses a different package name or method signature than the default
-> candidates, just adjust `packageCandidates` at the top of
-> `android/src/main/kotlin/.../DxCaptchaSdkBridge.kt`.
+> If your aar uses a different package/class name than the default candidates, adjust
+> `packageCandidates` / `viewClassCandidates` at the top of
+> `android/src/main/kotlin/com/kjxbyz/plugins/dxcaptcha_flutter/DxCaptchaSdkBridge.kt`.
 
 ### Web
 
@@ -209,6 +235,7 @@ final result = await controller.waitForResult(
 | `showVoice`      | `bool?`              | Whether to expose the voice verification entry                    |
 | `privacy`        | `DxCaptchaPrivacy`   | Data collection whitelist: `minimal` / `full`                     |
 | `enableCache`    | `bool`               | Cache frictionless results (ignored on iOS)                       |
+| `enableRiskSdk`  | `bool`               | Load the fingerprint (risk) SDK; default `false` (minimal usage)  |
 | `extra`          | `Map`                | Passthrough params such as private `keyURL`, `ua_js`, `scriptUrl` |
 
 ### DxCaptchaResult
@@ -251,7 +278,8 @@ sure `DXCaptcha.bundle` is packaged. For private deployments, always provide the
 `apiServer` including `https://`.
 
 **Android reports `sdk_unavailable`**
-The aar is not in `android/libs/`, or it was added without running `flutter clean` afterwards.
+The aar ships with the plugin, so this should not happen normally; if you removed the aar
+from `android/libs/` or swapped versions, run `flutter clean` before rebuilding.
 
 **Token starts with `sl`**
 That is the degraded token issued when the front end cannot reach the network, meaning the

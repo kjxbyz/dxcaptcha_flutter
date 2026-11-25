@@ -83,7 +83,12 @@ enum DxCaptchaEventType {
     switch (key) {
       case 'loadfail':
       case 'error':
+      // Android v5.1.7r+ 的事件名（文档与 DEMO 确认）。
+      case 'oncaptchajsloadfail':
         return DxCaptchaEventType.loadFail;
+      case 'oncaptchajsloaded':
+      case 'oncaptchajsload':
+        return DxCaptchaEventType.ready;
       case 'beforerender':
       case 'afterrender':
         return DxCaptchaEventType.render;

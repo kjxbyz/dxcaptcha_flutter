@@ -24,7 +24,7 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.pcxx.dxcaptcha_flutter
+        package: com.kjxbyz.plugins.dxcaptcha_flutter
         pluginClass: DxcaptchaFlutterPlugin
       ios:
         pluginClass: DxcaptchaFlutterPlugin

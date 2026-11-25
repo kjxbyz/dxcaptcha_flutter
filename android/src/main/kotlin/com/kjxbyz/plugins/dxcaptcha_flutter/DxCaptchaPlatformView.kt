@@ -1,4 +1,4 @@
-package com.pcxx.dxcaptcha_flutter
+package com.kjxbyz.plugins.dxcaptcha_flutter
 
 import android.content.Context
 import android.graphics.Color

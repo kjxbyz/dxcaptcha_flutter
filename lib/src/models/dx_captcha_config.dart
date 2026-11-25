@@ -78,6 +78,7 @@ class DxCaptchaConfig {
     this.showVoice,
     this.privacy = DxCaptchaPrivacy.minimal,
     this.enableCache = true,
+    this.enableRiskSdk = false,
     this.extra = const <String, Object?>{},
   });
 
@@ -121,6 +122,17 @@ class DxCaptchaConfig {
   /// 是否启用无感验证结果本地缓存（Android / Web 支持，iOS 忽略）。
   final bool enableCache;
 
+  /// 是否加载顶象设备指纹（风控）SDK，默认 `false`（最小化使用）。
+  ///
+  /// 设为 `false` 时 Android 端自动传入 `DXKeyRiskEnable=false` 与
+  /// `wait_for_const_id_sdk=false`（通知服务端不等待设备指纹），并且跳过
+  /// `setAllowPrivacyList` 调用，无需在工程中集成 `dx-risk-*.aar`；
+  /// 代价是失去设备指纹带来的安全增强能力。
+  ///
+  /// 设为 `true` 时需要在插件 `android/libs/` 中提供 `dx-risk-*.aar`
+  /// （iOS 端使用含指纹的 xcframework），SDK 将按 [privacy] 白名单采集。
+  final bool enableRiskSdk;
+
   /// 透传给 SDK 的额外参数，键名与顶象文档保持一致。
   ///
   /// 用于覆盖上面未覆盖到的参数，例如私有化部署的 `keyURL`、`ua_js`。
@@ -141,6 +153,7 @@ class DxCaptchaConfig {
       if (showVoice != null) 'showVoice': showVoice,
       'privacy': privacy.value,
       'cacheStorage': enableCache,
+      'enableRiskSdk': enableRiskSdk,
       ...extra,
     };
   }
@@ -159,6 +172,7 @@ class DxCaptchaConfig {
     bool? showVoice,
     DxCaptchaPrivacy? privacy,
     bool? enableCache,
+    bool? enableRiskSdk,
     Map<String, Object?>? extra,
   }) {
     return DxCaptchaConfig(
@@ -174,6 +188,7 @@ class DxCaptchaConfig {
       showVoice: showVoice ?? this.showVoice,
       privacy: privacy ?? this.privacy,
       enableCache: enableCache ?? this.enableCache,
+      enableRiskSdk: enableRiskSdk ?? this.enableRiskSdk,
       extra: extra ?? this.extra,
     );
   }

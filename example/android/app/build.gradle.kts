@@ -1,13 +1,15 @@
 plugins {
     id("com.android.application")
+    id("org.jetbrains.kotlin.android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
 android {
-    namespace = "com.pcxx.dxcaptcha_flutter_example"
+    namespace = "com.kjxbyz.plugins.dxcaptcha_flutter_example"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // 本机已装 28.2.13676358；flutter.ndkVersion 指向的 27.0.12077973 目录损坏。
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -16,7 +18,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.pcxx.dxcaptcha_flutter_example"
+        applicationId = "com.kjxbyz.plugins.dxcaptcha_flutter_example"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -35,6 +37,16 @@ android {
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
         }
+    }
+}
+
+// AGP 9 开启了唯一的 namespace 校验：Flutter 默认注入的 espresso 3.2.0 中
+// espresso-core 与 espresso-idling-resource 共用 androidx.test.espresso 命名空间，
+// 强制升级到已修复该问题的 3.6.1。
+configurations.all {
+    resolutionStrategy {
+        force("androidx.test.espresso:espresso-core:3.6.1")
+        force("androidx.test.espresso:espresso-idling-resource:3.6.1")
     }
 }
 

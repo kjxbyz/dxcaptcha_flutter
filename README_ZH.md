@@ -21,7 +21,7 @@
 | 私有化 apiServer | ✅  | ✅      | ✅  | —        |
 
 - iOS：`dx-captcha.xcframework` v5.4.18r（已随插件内置）
-- Android：需自行下载 `dx-captcha-*.aar` 放入插件 `android/libs/`
+- Android：`dx-captcha-without-risk-v5.4.27r.aar`（已随插件内置，默认最小化模式不集成风控）
 - Web：自动从顶象 CDN 加载 v5 JS SDK，无需手动引入
 
 ## 环境要求
@@ -84,29 +84,49 @@ ios/Frameworks/DXCaptcha.bundle         # 验证码前端资源（缺失会白�
 
 ### Android
 
-顶象不提供公开的 Maven 仓库，需要从控制台下载 aar：
-
-1. 登录顶象控制台 → 无感验证 → SDK 下载
-2. 把 `dx-captcha-without-risk-vX.X.X.aar`（推荐，不含设备指纹）放到
-   `dxcaptcha_flutter/android/libs/` 目录
-3. 重新构建，Gradle 会通过 `fileTree` 自动引入
+验证码 SDK 已随插件内置，默认按官方文档「最小化使用」运行（**不集成设备指纹/风控 SDK**）：
 
 ```
 dxcaptcha_flutter/
 └── android/libs/
     ├── README.md
-    └── dx-captcha-without-risk-v5.4.27.aar   ← 放这里
+    └── dx-captcha-without-risk-v5.4.27r.aar   # 验证码 SDK
 ```
+
+> **关于 "without-risk" 与风控 SDK**
+> 实测反编译确认：`dx-captcha-without-risk` 的 "without-risk" 只是「不打包风控 SDK，
+> 由接入方自行提供」——`DXKeyRiskEnable` 默认为 true 时，`startToLoad` 内部、
+> `setAllowPrivacyList` 与 token 获取链路在字节码层都会调用 `com.dx.mobile.risk.DXRisk`，
+> 缺少该类时抛 `NoClassDefFoundError`。
+> 插件按官方「最小化使用」配置默认关闭风控：`enableRiskSdk: false` 时自动传入
+> `DXKeyRiskEnable=false`（不加载设备指纹 SDK）与 `wait_for_const_id_sdk=false`
+> （通知服务端不等待设备指纹），并跳过 `setAllowPrivacyList` 调用（官方最小化示例
+> 同样省略），此时无需任何 risk 相关依赖。代价是失去设备指纹的安全增强能力。
+
+需要风控增强时：
+
+1. Dart 侧设置 `DxCaptchaConfig(enableRiskSdk: true)`
+2. 把官方 DEMO 包内的 `dx-risk-v*.aar`（与验证码 SDK 版本配对）放入 `android/libs/`
+3. `flutter clean && flutter build`；采集范围由 `privacy` 控制
+   （`minimal` 对应 `PrivacyFlag.DEFALUT=0`），隐私政策按顶象合规指南声明
+
+如需更换版本，替换 `android/libs/` 下的 aar 后重新 `flutter clean && flutter build`
+即可——Gradle 会在配置期自动把 aar 解包为 classes.jar / assets / jniLibs 注入插件
+（AGP 禁止库模块直接依赖本地 aar，解包逻辑见 `android/build.gradle.kts`）；
+含指纹的 `dx-captcha-v*.aar`（自带 dx-risk）同样适用，此时保持 `enableRiskSdk: true`。
 
 插件已内置：
 
 - `INTERNET` / `ACCESS_NETWORK_STATE` 权限
 - 顶象官方混淆规则（`android/consumer-rules.pro`）
-- 对 SDK 的反射调用封装，未放入 aar 时不会编译失败，而是在 Dart 侧返回
-  `sdk_unavailable` 的可读错误
+- 按官方文档对齐的反射桥接：`DXCaptchaViewV5.init(appId)` +
+  `startToLoad(listener, "success", "fail")`；`enableRiskSdk: true` 时初始化前
+  自动调用 `setAllowPrivacyList`（`PrivacyFlag.DEFALUT=0` / `ALL=-1`）
+- 未放入 aar 时不会编译失败，而是在 Dart 侧返回 `sdk_unavailable` 的可读错误
 
-> 若你的 aar 包名与方法签名与默认候选不同，只需调整
-> `android/src/main/kotlin/.../DxCaptchaSdkBridge.kt` 顶部的 `packageCandidates`。
+> 若你的 aar 包名/类名与默认候选不同，只需调整
+> `android/src/main/kotlin/com/kjxbyz/plugins/dxcaptcha_flutter/DxCaptchaSdkBridge.kt`
+> 顶部的 `packageCandidates` / `viewClassCandidates`。
 
 ### Web
 
@@ -214,6 +234,7 @@ timeout: const Duration(minutes
 | `showVoice`      | `bool?`              | 是否展示语音验证入口                                   |
 | `privacy`        | `DxCaptchaPrivacy`   | 隐私采集白名单：`minimal` / `full`                     |
 | `enableCache`    | `bool`               | 无感验证结果缓存（iOS 忽略）                           |
+| `enableRiskSdk`  | `bool`               | 是否加载设备指纹（风控）SDK，默认 `false`（最小化使用） |
 | `extra`          | `Map`                | 透传参数，如私有化 `keyURL`、`ua_js`、`scriptUrl`      |
 
 ### DxCaptchaResult
@@ -254,7 +275,8 @@ fvm flutter run -d chrome # Web
 私有化部署务必填写完整的 `apiServer`（含 `https://`）。
 
 **Android 报 `sdk_unavailable`**
-aar 未放入 `android/libs/`，或放入后没有重新执行 `flutter clean`。
+插件已内置 aar，正常不会出现；若曾移除 `android/libs/` 下的 aar 或更换版本，
+需重新执行 `flutter clean` 后再构建。
 
 **token 以 `sl` 开头**
 这是前端网络不通时的降级 token，说明设备无法直连 `apiServer`，需要检查网络或

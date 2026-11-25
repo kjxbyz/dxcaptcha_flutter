@@ -11,6 +11,7 @@ void main() {
       expect(map['style'], 'embed');
       expect(map['privacy'], 'minimal');
       expect(map['cacheStorage'], true);
+      expect(map['enableRiskSdk'], false);
       expect(map.containsKey('apiServer'), isFalse);
       expect(map.containsKey('language'), isFalse);
       expect(map.containsKey('width'), isFalse);
@@ -32,6 +33,7 @@ void main() {
         showVoice: true,
         privacy: DxCaptchaPrivacy.full,
         enableCache: false,
+        enableRiskSdk: true,
         extra: const <String, Object?>{'keyURL': 'https://key.example.com'},
       );
       final Map<String, Object?> map = config.toMap();
@@ -47,6 +49,7 @@ void main() {
       expect(map['showVoice'], true);
       expect(map['privacy'], 'full');
       expect(map['cacheStorage'], false);
+      expect(map['enableRiskSdk'], true);
       expect(map['keyURL'], 'https://key.example.com');
     });
 
@@ -60,6 +63,12 @@ void main() {
       expect(copy.appId, 'app-id');
       expect(copy.width, 300);
       expect(copy.language, DxCaptchaLanguage.en);
+      expect(copy.enableRiskSdk, false);
+    });
+
+    test('copyWith 可覆盖 enableRiskSdk', () {
+      const DxCaptchaConfig base = DxCaptchaConfig(appId: 'app-id');
+      expect(base.copyWith(enableRiskSdk: true).enableRiskSdk, true);
     });
   });
 
