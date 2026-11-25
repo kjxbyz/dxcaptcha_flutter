@@ -13,24 +13,24 @@
 
 ## 平台支持
 
-| 能力             | iOS | Android | 桌面端   |
-|------------------|-----|---------|----------|
-| 嵌入组件         | ✅  | ✅      | 占位提示 |
-| 弹窗模式         | ✅  | ✅      | 占位提示 |
-| 中文 / 英文      | ✅  | ✅      | —        |
-| 私有化 apiServer | ✅  | ✅      | —        |
+| 能力             | iOS | Android |
+| ---------------- | :-: | :-----: |
+| 嵌入组件         | ✅  |   ✅    |
+| 弹窗模式         | ✅  |   ✅    |
+| 中文 / 英文      | ✅  |   ✅    |
+| 私有化 apiServer | ✅  |   ✅    |
 
 - iOS：`dx-captcha.xcframework` v5.4.18r（已随插件内置）
 - Android：`dx-captcha-without-risk-v5.4.27r.aar`（已随插件内置，默认最小化模式不集成风控）
 
 ## 环境要求
 
-| 项目    | 版本                                    |
-|---------|-----------------------------------------|
-| Flutter | >= 3.27（示例工程用 FVM 固定在 3.35.7） |
-| Dart    | >= 3.9                                  |
-| iOS     | >= 15.0（Xcode 27 起模拟器最低 15.0）   |
-| Android | minSdk 24，compileSdk 36                |
+| 项目    | 版本                                  |
+|---------|---------------------------------------|
+| Flutter | >= 3.35.0                             |
+| Dart    | >= 3.9                                |
+| iOS     | >= 15.0（Xcode 27 起模拟器最低 15.0） |
+| Android | minSdk 24，compileSdk 36              |
 
 项目已附带 `.fvmrc`，推荐直接使用 FVM：
 
@@ -44,7 +44,7 @@ fvm flutter pub get
 ```yaml
 dependencies:
   dxcaptcha_flutter:
-    path: ../dxcaptcha_flutter   # 或发布后的版本号
+    path: ../dxcaptcha_flutter # 或发布后的版本号
 ```
 
 ### iOS
@@ -63,23 +63,9 @@ ios/Frameworks/DXCaptcha.bundle         # 验证码前端资源（缺失会白�
 - 链接 `WebKit / UIKit / z / resolv / c++`
 - 最低部署版本 15.0
 
-> **符号链接插件的路径修正**
-> Flutter 通过 `.symlinks/plugins/<name>` 符号链接引入本地插件，CocoaPods 在解析
-> `vendored_frameworks` 时会重复叠加链接层级，导致框架指向不存在的目录并报
-> `Undefined symbol: _OBJC_CLASS_$_DXCaptchaViewV5`。
-> 示例工程在 `example/ios/Podfile` 中覆盖了路径解析函数来规避：
->
-> ```ruby
-> def flutter_relative_path_from_podfile(path)
->   File.realpath(path)
-> end
-> ```
->
-> 宿主工程若遇到同样的链接错误，把这段加到自己的 Podfile 中，然后重新
-> `pod install` 即可。
-
 使用 `use_frameworks!` 时资源会打包进 `dxcaptcha_flutter.framework`，若真机验证
-出现空白（验证码区域全白），把 `DXCaptcha.bundle` 额外加入 Runner target 的 **Copy Bundle Resources**。
+出现空白（验证码区域全白），把 `DXCaptcha.bundle` 额外加入 Runner target 的
+**Copy Bundle Resources**。
 
 ### Android
 
@@ -95,8 +81,8 @@ dxcaptcha_flutter/
 > **关于 "without-risk" 与风控 SDK**
 > 实测反编译确认：`dx-captcha-without-risk` 的 "without-risk" 只是「不打包风控 SDK，
 > 由接入方自行提供」——`DXKeyRiskEnable` 默认为 true 时，`startToLoad` 内部、
-> `setAllowPrivacyList` 与 token 获取链路在字节码层都会调用 `com.dx.mobile.risk.DXRisk`，
-> 缺少该类时抛 `NoClassDefFoundError`。
+> `setAllowPrivacyList` 与 token 获取链路在字节码层都会调用
+> `com.dx.mobile.risk.DXRisk`，缺少该类时抛 `NoClassDefFoundError`。
 > 插件按官方「最小化使用」配置默认关闭风控：`enableRiskSdk: false` 时自动传入
 > `DXKeyRiskEnable=false`（不加载设备指纹 SDK）与 `wait_for_const_id_sdk=false`
 > （通知服务端不等待设备指纹），并跳过 `setAllowPrivacyList` 调用（官方最小化示例
@@ -134,19 +120,18 @@ dxcaptcha_flutter/
 ```dart
 import 'package:dxcaptcha_flutter/dxcaptcha_flutter.dart';
 
-DxCaptcha
-(
-config: const DxCaptchaConfig(
-appId: 'your-app-id',
-language: DxCaptchaLanguage.zh,
-),
-onSuccess: (DxCaptchaResult result) {
-// 后端二次校验使用该 token
-print('token: ${result.token}');
-},
-onFail: (DxCaptchaResult result) {
-print('失败: ${result.message}');
-},
+DxCaptcha(
+  config: const DxCaptchaConfig(
+    appId: 'your-app-id',
+    language: DxCaptchaLanguage.zh,
+  ),
+  onSuccess: (DxCaptchaResult result) {
+    // 后端二次校验使用该 token
+    print('token: ${result.token}');
+  },
+  onFail: (DxCaptchaResult result) {
+    print('失败: ${result.message}');
+  },
 )
 ```
 
@@ -155,37 +140,32 @@ print('失败: ${result.message}');
 ### 弹窗模式
 
 ```dart
-
-final DxCaptchaResult? result = await
-DxCaptcha.show
-(
-context,
-config: const DxCaptchaConfig(appId: 'your-app-id'),
-title: '安全验证',
-description: '请完成滑动验证以继续',
-timeout: const Duration(minutes: 2),
+final DxCaptchaResult? result = await DxCaptcha.show(
+  context,
+  config: const DxCaptchaConfig(appId: 'your-app-id'),
+  title: '安全验证',
+  description: '请完成滑动验证以继续',
+  timeout: const Duration(minutes: 2),
 );
 
 if (result == null) {
-// 用户主动关闭
+  // 用户主动关闭
 } else if (result.isSuccess) {
-await login(result.token!);
+  await login(result.token!);
 } else {
-// result.message 为失败原因，弹窗内已提供「重试」
+  // result.message 为失败原因，弹窗内已提供「重试」
 }
 ```
 
 ### 控制器：状态与重试
 
 ```dart
-
 final DxCaptchaController controller = DxCaptchaController();
 
-DxCaptcha
-(
-config: config,
-controller: controller,
-onSuccess: (result) => print(result.token),
+DxCaptcha(
+  config: config,
+  controller: controller,
+  onSuccess: (result) => print(result.token),
 );
 
 // 读取状态
@@ -196,11 +176,7 @@ await controller.reload();
 
 // 等待下一次验证结果（成功或失败都会返回）
 final result = await controller.waitForResult(
-timeout: const Duration(minutes
-:
-1
-)
-,
+  timeout: const Duration(minutes: 1),
 );
 ```
 
@@ -208,26 +184,26 @@ timeout: const Duration(minutes
 
 ### DxCaptchaConfig
 
-| 参数             | 类型                 | 说明                                                   |
-|------------------|----------------------|--------------------------------------------------------|
-| `appId`          | `String`             | 必填，顶象控制台应用管理获取                           |
-| `apiServer`      | `String?`            | 私有化部署域名，SaaS 留空                              |
-| `language`       | `DxCaptchaLanguage?` | `zh` / `en`                                            |
-| `width`          | `int?`               | 验证码控件宽度（像素）                                 |
-| `bgColor`        | `String?`            | 控件背景色，如 `#FFFFFF`                               |
-| `customStyle`    | `Map`                | 对应 SDK `customStyle`                                 |
-| `customLanguage` | `Map`                | 对应 SDK `customLanguage`                              |
-| `timeout`        | `Duration?`          | 请求超时，默认 6 秒                                    |
-| `showVoice`      | `bool?`              | 是否展示语音验证入口                                   |
-| `privacy`        | `DxCaptchaPrivacy`   | 隐私采集白名单：`minimal` / `full`                     |
-| `enableCache`    | `bool`               | 无感验证结果缓存（iOS 忽略）                           |
+| 参数             | 类型                 | 说明                                                    |
+| ---------------- | -------------------- | ------------------------------------------------------- |
+| `appId`          | `String`             | 必填，顶象控制台应用管理获取                            |
+| `apiServer`      | `String?`            | 私有化部署域名，SaaS 留空                               |
+| `language`       | `DxCaptchaLanguage?` | `zh` / `en`                                             |
+| `width`          | `int?`               | 验证码控件宽度（像素）                                  |
+| `bgColor`        | `String?`            | 控件背景色，如 `#FFFFFF`                                |
+| `customStyle`    | `Map`                | 对应 SDK `customStyle`                                  |
+| `customLanguage` | `Map`                | 对应 SDK `customLanguage`                               |
+| `timeout`        | `Duration?`          | 请求超时，默认 6 秒                                     |
+| `showVoice`      | `bool?`              | 是否展示语音验证入口                                    |
+| `privacy`        | `DxCaptchaPrivacy`   | 隐私采集白名单：`minimal` / `full`                      |
+| `enableCache`    | `bool`               | 无感验证结果缓存（iOS 忽略）                            |
 | `enableRiskSdk`  | `bool`               | 是否加载设备指纹（风控）SDK，默认 `false`（最小化使用） |
-| `extra`          | `Map`                | 透传参数，如私有化 `keyURL`、`ua_js`                   |
+| `extra`          | `Map`                | 透传参数，如私有化 `keyURL`、`ua_js`                    |
 
 ### DxCaptchaResult
 
 | 成员        | 说明                                     |
-|-------------|------------------------------------------|
+| ----------- | ---------------------------------------- |
 | `type`      | `DxCaptchaEventType`，归一化后的事件类型 |
 | `token`     | 验证通过凭证，仅 `success` 时有值        |
 | `message`   | 失败原因                                 |
@@ -249,7 +225,7 @@ timeout: const Duration(minutes
 
 ```bash
 cd example
-fvm flutter run           # 选择 iOS / Android 设备
+fvm flutter run # 选择 iOS / Android 设备
 ```
 
 示例包含 appId 输入、中英文切换、嵌入/弹窗切换、事件日志与 token 展示。
@@ -286,7 +262,7 @@ v5.4.21 时该参数必填，缺失时 SDK 可能按 `http` 请求资源被 ATS 
 注入默认值 `https:`，如需覆盖可通过 `extra: {'protocol': 'https:'}` 传入。
 
 **iOS 链接报 `Undefined symbol: _OBJC_CLASS_$_DXCaptchaViewV5`**
-见上文「符号链接插件的路径修正」。
+见上文「符号链接插件的路径问题」。
 
 ## License
 

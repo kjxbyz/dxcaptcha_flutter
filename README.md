@@ -3,24 +3,24 @@
 **English** | [简体中文](README_ZH.md)
 
 A Flutter plugin for DingXiang (顶象) CAPTCHA, supporting **iOS / Android**.
-It ships both an **embedded widget** and a **full-screen dialog**, sharing a single Dart API across
-both platforms.
+It ships both an **embedded widget** and a **full-screen dialog**, sharing a single
+Dart API across both platforms.
 
 - `DxCaptcha` — a single widget you can drop into your tree to render the CAPTCHA
-- `DxCaptcha.show(context)` — one line to present the CAPTCHA in a dialog, returning a structured
-  result
+- `DxCaptcha.show(context)` — one line to present the CAPTCHA in a dialog, returning a
+  structured result
 - `DxCaptchaController` — state tracking, retry after failure, token access
 - Normalized events — platform-specific event name differences are handled inside the plugin
 - Built-in loading/error placeholders, Chinese/English UI, and private-deployment passthrough
 
 ## Platform support
 
-| Capability          | iOS | Android | Desktop     |
-|---------------------|-----|---------|-------------|
-| Embedded widget     | ✅  | ✅      | Placeholder |
-| Dialog mode         | ✅  | ✅      | Placeholder |
-| Chinese / English   | ✅  | ✅      | —           |
-| Private `apiServer` | ✅  | ✅      | —           |
+| Capability          | iOS | Android |
+| ------------------- | :-: | :-----: |
+| Embedded widget     | ✅  |   ✅    |
+| Dialog mode         | ✅  |   ✅    |
+| Chinese / English   | ✅  |   ✅    |
+| Private `apiServer` | ✅  |   ✅    |
 
 - iOS: `dx-captcha.xcframework` v5.4.18r (bundled with the plugin)
 - Android: `dx-captcha-without-risk-v5.4.27r.aar` bundled; minimal mode by default (no risk SDK)
@@ -29,7 +29,7 @@ both platforms.
 
 | Item    | Version                                                 |
 |---------|---------------------------------------------------------|
-| Flutter | >= 3.27 (the example app is pinned to 3.35.7 via FVM)   |
+| Flutter | >= 3.35.0                                               |
 | Dart    | >= 3.9                                                  |
 | iOS     | >= 15.0 (Xcode 27 requires 15.0 even for the simulator) |
 | Android | minSdk 24, compileSdk 36                                |
@@ -37,7 +37,7 @@ both platforms.
 A `.fvmrc` is included, so using FVM is recommended:
 
 ```bash
-fvm install          # install the version pinned in .fvmrc
+fvm install # install the version pinned in .fvmrc
 fvm flutter pub get
 ```
 
@@ -46,7 +46,7 @@ fvm flutter pub get
 ```yaml
 dependencies:
   dxcaptcha_flutter:
-    path: ../dxcaptcha_flutter   # or the published version
+    path: ../dxcaptcha_flutter # or the published version
 ```
 
 ### iOS
@@ -64,22 +64,6 @@ ios/Frameworks/DXCaptcha.bundle         # CAPTCHA front-end assets (missing => b
 - `resources` for `DXCaptcha.bundle`
 - linking `WebKit / UIKit / z / resolv / c++`
 - a minimum deployment target of 15.0
-
-> **Path fix for symlinked plugins**
-> Flutter pulls local plugins in through the `.symlinks/plugins/<name>` symlink, and
-> CocoaPods over-counts the link depth when resolving `vendored_frameworks`. The
-> framework then points at a directory that does not exist and the build fails with
-> `Undefined symbol: _OBJC_CLASS_$_DXCaptchaViewV5`.
-> The example app overrides the path resolver in `example/ios/Podfile` to work around it:
->
-> ```ruby
-> def flutter_relative_path_from_podfile(path)
->   File.realpath(path)
-> end
-> ```
->
-> If your host app hits the same linker error, add this snippet to your own Podfile and
-> run `pod install` again.
 
 When `use_frameworks!` is enabled the assets are bundled inside `dxcaptcha_flutter.framework`.
 If the CAPTCHA area renders blank on a real device, add `DXCaptcha.bundle` to the Runner
@@ -145,19 +129,18 @@ The plugin already includes:
 ```dart
 import 'package:dxcaptcha_flutter/dxcaptcha_flutter.dart';
 
-DxCaptcha
-(
-config: const DxCaptchaConfig(
-appId: 'your-app-id',
-language: DxCaptchaLanguage.zh,
-),
-onSuccess: (DxCaptchaResult result) {
-// Send this token to your backend for server-side verification
-print('token: ${result.token}');
-},
-onFail: (DxCaptchaResult result) {
-print('failed: ${result.message}');
-},
+DxCaptcha(
+  config: const DxCaptchaConfig(
+    appId: 'your-app-id',
+    language: DxCaptchaLanguage.zh,
+  ),
+  onSuccess: (DxCaptchaResult result) {
+    // Send this token to your backend for server-side verification
+    print('token: ${result.token}');
+  },
+  onFail: (DxCaptchaResult result) {
+    print('failed: ${result.message}');
+  },
 )
 ```
 
@@ -167,37 +150,32 @@ The widget lays out at a default `362 : 335` aspect ratio; override it with
 ### Dialog mode
 
 ```dart
-
-final DxCaptchaResult? result = await
-DxCaptcha.show
-(
-context,
-config: const DxCaptchaConfig(appId: 'your-app-id'),
-title: 'Security check',
-description: 'Slide to verify to continue',
-timeout: const Duration(minutes: 2),
+final DxCaptchaResult? result = await DxCaptcha.show(
+  context,
+  config: const DxCaptchaConfig(appId: 'your-app-id'),
+  title: 'Security check',
+  description: 'Slide to verify to continue',
+  timeout: const Duration(minutes: 2),
 );
 
 if (result == null) {
-// The user dismissed the dialog
+  // The user dismissed the dialog
 } else if (result.isSuccess) {
-await login(result.token!);
+  await login(result.token!);
 } else {
-// result.message holds the failure reason; the dialog already offers "Retry"
+  // result.message holds the failure reason; the dialog already offers "Retry"
 }
 ```
 
 ### Controller: state and retry
 
 ```dart
-
 final DxCaptchaController controller = DxCaptchaController();
 
-DxCaptcha
-(
-config: config,
-controller: controller,
-onSuccess: (result) => print(result.token),
+DxCaptcha(
+  config: config,
+  controller: controller,
+  onSuccess: (result) => print(result.token),
 );
 
 // Read the state
@@ -208,11 +186,7 @@ await controller.reload();
 
 // Await the next result (resolves on both success and failure)
 final result = await controller.waitForResult(
-timeout: const Duration(minutes
-:
-1
-)
-,
+  timeout: const Duration(minutes: 1),
 );
 ```
 
@@ -221,7 +195,7 @@ timeout: const Duration(minutes
 ### DxCaptchaConfig
 
 | Parameter        | Type                 | Description                                                      |
-|------------------|----------------------|------------------------------------------------------------------|
+| ---------------- | -------------------- | ---------------------------------------------------------------- |
 | `appId`          | `String`             | Required; from App Management in the DingXiang console           |
 | `apiServer`      | `String?`            | Private deployment domain; leave empty for SaaS                  |
 | `language`       | `DxCaptchaLanguage?` | `zh` / `en`                                                      |
@@ -239,7 +213,7 @@ timeout: const Duration(minutes
 ### DxCaptchaResult
 
 | Member      | Description                                         |
-|-------------|-----------------------------------------------------|
+| ----------- | --------------------------------------------------- |
 | `type`      | `DxCaptchaEventType` — the normalized event type    |
 | `token`     | Verification credential; only set on `success`      |
 | `message`   | Failure reason                                      |
@@ -261,7 +235,7 @@ and `pass-by-server` into the same enum.
 
 ```bash
 cd example
-fvm flutter run           # pick an iOS / Android device
+fvm flutter run # pick an iOS / Android device
 ```
 
 The example includes an appId field, a Chinese/English switch, embedded/dialog switching,
@@ -284,29 +258,26 @@ device cannot connect to `apiServer` directly. Check connectivity or the private
 configuration.
 
 **iOS shows a blank (white) CAPTCHA area**
-The DingXiang SDK loads `DXCaptcha.bundle` from the app bundle root (`[NSBundle mainBundle]`). If
-the bundle is missing the WKWebView loads an
-empty page and the area stays white. Verify the bundle exists in the built
-app:
+The DingXiang SDK loads `DXCaptcha.bundle` from the app bundle root
+(`[NSBundle mainBundle]`). If the bundle is missing the WKWebView loads an empty page and
+the area stays white. Verify the bundle exists in the built app:
 
 ```bash
 ls build/ios/iphoneos/Runner.app/DXCaptcha.bundle
 ```
 
-If it is missing (e.g. it ended up inside
-`Frameworks/dxcaptcha_flutter.framework/`), the plugin podspec must declare
-`static_framework = true` (already set) — then re-run `pod install` and
-rebuild. The plugin also reports `sdk_resource_missing` when the bundle is
-absent, so check the error log for a faster diagnosis.
+If it is missing (e.g. it ended up inside `Frameworks/dxcaptcha_flutter.framework/`), the
+plugin podspec must declare `static_framework = true` (already set) — then re-run
+`pod install` and rebuild. The plugin also reports `sdk_resource_missing` when the bundle
+is absent, so check the error log for a faster diagnosis.
 
-Another common trigger of the `load_fail` event is a missing `protocol`
-config: it is required for iOS SDK versions below v5.4.21 (the bundled SDK is
-v5.4.18r); without it the SDK may request resources over `http`, which gets
-blocked by ATS. The plugin injects `https:` by default; override it via
-`extra: {'protocol': 'https:'}` if needed.
+Another common trigger of the `load_fail` event is a missing `protocol` config: it is
+required for iOS SDK versions below v5.4.21 (the bundled SDK is v5.4.18r); without it the
+SDK may request resources over `http`, which gets blocked by ATS. The plugin injects
+`https:` by default; override it via `extra: {'protocol': 'https:'}` if needed.
 
 **iOS linker error `Undefined symbol: _OBJC_CLASS_$_DXCaptchaViewV5`**
-See "Path fix for symlinked plugins" above.
+See "Path issue with symlinked plugins" above.
 
 ## License
 
