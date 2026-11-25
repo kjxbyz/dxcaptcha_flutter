@@ -19,10 +19,10 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/integration_test/ios"
 
 SPEC CHECKSUMS:
-  dxcaptcha_flutter: b8b67872d4e57efefcbc982a81eb531222a16ecb
+  dxcaptcha_flutter: 360a0806f8c1cefeba39c944466f96610bbb9570
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   integration_test: 4a889634ef21a45d28d50d622cf412dc6d9f586e
 
-PODFILE CHECKSUM: f5883ba9eb3ae50ed75c04b688f38bf3e547a350
+PODFILE CHECKSUM: 2fff7d52dd2caa26140a3bb8118dd32aef4a8f71
 
 COCOAPODS: 1.17.0

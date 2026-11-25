@@ -8,7 +8,6 @@ void main() {
       final Map<String, Object?> map = config.toMap();
 
       expect(map['appId'], 'app-id');
-      expect(map['style'], 'embed');
       expect(map['privacy'], 'minimal');
       expect(map['cacheStorage'], true);
       expect(map['enableRiskSdk'], false);
@@ -22,7 +21,6 @@ void main() {
         appId: 'app-id',
         apiServer: 'https://cap.example.com',
         language: DxCaptchaLanguage.en,
-        style: DxCaptchaStyle.popup,
         width: 300,
         bgColor: '#FFFFFF',
         customStyle: const <String, Object?>{
@@ -40,7 +38,6 @@ void main() {
 
       expect(map['apiServer'], 'https://cap.example.com');
       expect(map['language'], 'en');
-      expect(map['style'], 'popup');
       expect(map['width'], 300);
       expect(map['bgColor'], '#FFFFFF');
       expect(map['customStyle'], isA<Map<String, Object?>>());

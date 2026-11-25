@@ -1,6 +1,6 @@
 # ChangeLog
 
-## next
+## 0.0.2-dev.0
 
 * 新增 `DxCaptcha` 嵌入组件与 `DxCaptcha.show()` 弹窗模式，三端共用一套 API
 * 新增 `DxCaptchaController`，支持状态读取、失败重载与 `waitForResult`
@@ -16,12 +16,8 @@
   `DXKeyRiskEnable` 开关保护）。Gradle 配置期自动解包本地 aar
   （classes.jar / assets / jni / libs），规避 AGP 对库模块直接依赖本地 aar 的限制；
   补充 `packaging.jniLibs.keepDebugSymbols` 保留风控 so
-* 包名迁移：`com.pcxx.dxcaptcha_flutter` → `com.kjxbyz.plugins.dxcaptcha_flutter`
-* Web：自动加载顶象 v5 JS SDK（`_dx.Captcha`），支持自定义 CDN
 * 事件归一化：补充 Android `onCaptchaJsLoaded` / `onCaptchaJsLoadFail` 映射；
   `DXCaptchaEventVerifySuccess`、`pass-by-server` 等写法统一映射
-* 补齐文档、示例工程、单元测试与混淆规则
-* 文档拆分：`README.md` 为英文版（默认），`README_ZH.md` 为中文版
 
 ## 0.0.1+1
 

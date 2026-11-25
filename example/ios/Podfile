@@ -27,13 +27,6 @@ require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelpe
 
 flutter_ios_podfile_setup
 
-# CocoaPods 在计算 vendored_frameworks 的 PBXFileReference 相对路径时，会对
-# .symlinks/plugins 下的符号链接重复叠加层级，导致 xcframework 指向不存在的目录。
-# 让插件以真实路径注册，可绕开该问题。
-# def flutter_relative_path_from_podfile(path)
-#   File.realpath(path)
-# end
-
 target 'Runner' do
   use_frameworks!
 

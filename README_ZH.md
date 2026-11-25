@@ -2,27 +2,26 @@
 
 [English](README.md) | **简体中文**
 
-顶象无感验证码（DingXiang Captcha）Flutter 插件，支持 **iOS / Android / Web**，
-提供 **嵌入组件** 与 **全屏弹窗** 两种接入方式，三端共用一套 Dart API。
+顶象无感验证码（DingXiang Captcha）Flutter 插件，支持 **iOS / Android**，
+提供 **嵌入组件** 与 **全屏弹窗** 两种接入方式，两端共用一套 Dart API。
 
 - 统一的 `DxCaptcha` 组件，直接放进 Widget 树即可渲染验证码
 - `DxCaptcha.show(context)` 一行代码弹出验证，返回结构化结果
 - `DxCaptchaController` 管理状态、失败重试、读取 token
-- 事件归一化：iOS / Android / Web 的事件名差异由插件内部抹平
+- 事件归一化：iOS / Android 的事件名差异由插件内部抹平
 - 内置加载/错误占位、中文/英文界面、私有化部署参数透传
 
 ## 平台支持
 
-| 能力             | iOS | Android | Web | 桌面端   |
-|------------------|-----|---------|-----|----------|
-| 嵌入组件         | ✅  | ✅      | ✅  | 占位提示 |
-| 弹窗模式         | ✅  | ✅      | ✅  | 占位提示 |
-| 中文 / 英文      | ✅  | ✅      | ✅  | —        |
-| 私有化 apiServer | ✅  | ✅      | ✅  | —        |
+| 能力             | iOS | Android | 桌面端   |
+|------------------|-----|---------|----------|
+| 嵌入组件         | ✅  | ✅      | 占位提示 |
+| 弹窗模式         | ✅  | ✅      | 占位提示 |
+| 中文 / 英文      | ✅  | ✅      | —        |
+| 私有化 apiServer | ✅  | ✅      | —        |
 
 - iOS：`dx-captcha.xcframework` v5.4.18r（已随插件内置）
 - Android：`dx-captcha-without-risk-v5.4.27r.aar`（已随插件内置，默认最小化模式不集成风控）
-- Web：自动从顶象 CDN 加载 v5 JS SDK，无需手动引入
 
 ## 环境要求
 
@@ -128,17 +127,6 @@ dxcaptcha_flutter/
 > `android/src/main/kotlin/com/kjxbyz/plugins/dxcaptcha_flutter/DxCaptchaSdkBridge.kt`
 > 顶部的 `packageCandidates` / `viewClassCandidates`。
 
-### Web
-
-无需配置，插件会在首次使用时动态插入：
-
-```html
-
-<script src="https://cdn.dingxiang-inc.com/ctu-group/captcha-ui/v5/index.js"></script>
-```
-
-如需自定义 CDN（例如内网代理），通过 `config.extra['scriptUrl']` 指定。
-
 ## 快速开始
 
 ### 嵌入模式
@@ -225,7 +213,6 @@ timeout: const Duration(minutes
 | `appId`          | `String`             | 必填，顶象控制台应用管理获取                           |
 | `apiServer`      | `String?`            | 私有化部署域名，SaaS 留空                              |
 | `language`       | `DxCaptchaLanguage?` | `zh` / `en`                                            |
-| `style`          | `DxCaptchaStyle`     | 仅 Web 生效：`embed` / `inline` / `popup` / `oneclick` |
 | `width`          | `int?`               | 验证码控件宽度（像素）                                 |
 | `bgColor`        | `String?`            | 控件背景色，如 `#FFFFFF`                               |
 | `customStyle`    | `Map`                | 对应 SDK `customStyle`                                 |
@@ -235,7 +222,7 @@ timeout: const Duration(minutes
 | `privacy`        | `DxCaptchaPrivacy`   | 隐私采集白名单：`minimal` / `full`                     |
 | `enableCache`    | `bool`               | 无感验证结果缓存（iOS 忽略）                           |
 | `enableRiskSdk`  | `bool`               | 是否加载设备指纹（风控）SDK，默认 `false`（最小化使用） |
-| `extra`          | `Map`                | 透传参数，如私有化 `keyURL`、`ua_js`、`scriptUrl`      |
+| `extra`          | `Map`                | 透传参数，如私有化 `keyURL`、`ua_js`                   |
 
 ### DxCaptchaResult
 
@@ -263,7 +250,6 @@ timeout: const Duration(minutes
 ```bash
 cd example
 fvm flutter run           # 选择 iOS / Android 设备
-fvm flutter run -d chrome # Web
 ```
 
 示例包含 appId 输入、中英文切换、嵌入/弹窗切换、事件日志与 token 展示。

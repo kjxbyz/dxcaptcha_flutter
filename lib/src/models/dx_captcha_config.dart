@@ -1,26 +1,3 @@
-/// 验证码交互样式。
-///
-/// 与顶象 JS / 原生 SDK 的 `style` 参数一一对应。移动端原生 SDK
-/// （`DXCaptchaViewV5`）始终以嵌入方式渲染，`style` 仅对 Web 生效。
-enum DxCaptchaStyle {
-  /// 默认的嵌入样式，验证码固定在容器内渲染。
-  embed('embed'),
-
-  /// 内联浮动样式，仅 Web 支持。
-  inline('inline'),
-
-  /// 点击后弹出验证窗口，仅 Web 支持。
-  popup('popup'),
-
-  /// 一键触发样式，仅 Web 支持。
-  oneclick('oneclick');
-
-  const DxCaptchaStyle(this.value);
-
-  /// 传给 SDK 的原始字符串值。
-  final String value;
-}
-
 /// 验证码界面语言。
 enum DxCaptchaLanguage {
   /// 中文（SDK 取值 `cn`）。
@@ -69,7 +46,6 @@ class DxCaptchaConfig {
     required this.appId,
     this.apiServer,
     this.language,
-    this.style = DxCaptchaStyle.embed,
     this.width,
     this.bgColor,
     this.customStyle = const <String, Object?>{},
@@ -92,9 +68,6 @@ class DxCaptchaConfig {
 
   /// 界面语言，留空时由 SDK 决定。
   final DxCaptchaLanguage? language;
-
-  /// 交互样式，仅 Web 端生效。
-  final DxCaptchaStyle style;
 
   /// 验证码控件宽度（像素），留空使用 SDK 默认值。
   final int? width;
@@ -119,7 +92,7 @@ class DxCaptchaConfig {
   /// 隐私采集白名单。
   final DxCaptchaPrivacy privacy;
 
-  /// 是否启用无感验证结果本地缓存（Android / Web 支持，iOS 忽略）。
+  /// 是否启用无感验证结果本地缓存（Android 支持，iOS 忽略）。
   final bool enableCache;
 
   /// 是否加载顶象设备指纹（风控）SDK，默认 `false`（最小化使用）。
@@ -144,7 +117,6 @@ class DxCaptchaConfig {
       'appId': appId,
       if (apiServer != null && apiServer!.isNotEmpty) 'apiServer': apiServer,
       if (language != null) 'language': language!.value,
-      'style': style.value,
       if (width != null) 'width': width,
       if (bgColor != null) 'bgColor': bgColor,
       if (customStyle.isNotEmpty) 'customStyle': customStyle,
@@ -163,7 +135,6 @@ class DxCaptchaConfig {
     String? appId,
     String? apiServer,
     DxCaptchaLanguage? language,
-    DxCaptchaStyle? style,
     int? width,
     String? bgColor,
     Map<String, Object?>? customStyle,
@@ -179,7 +150,6 @@ class DxCaptchaConfig {
       appId: appId ?? this.appId,
       apiServer: apiServer ?? this.apiServer,
       language: language ?? this.language,
-      style: style ?? this.style,
       width: width ?? this.width,
       bgColor: bgColor ?? this.bgColor,
       customStyle: customStyle ?? this.customStyle,
@@ -196,5 +166,5 @@ class DxCaptchaConfig {
   @override
   String toString() =>
       'DxCaptchaConfig(appId: $appId, language: ${language?.value}, '
-      'style: ${style.value}, apiServer: $apiServer)';
+      'apiServer: $apiServer)';
 }

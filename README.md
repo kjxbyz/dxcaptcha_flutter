@@ -2,9 +2,9 @@
 
 **English** | [简体中文](README_ZH.md)
 
-A Flutter plugin for DingXiang (顶象) CAPTCHA, supporting **iOS / Android / Web**.
+A Flutter plugin for DingXiang (顶象) CAPTCHA, supporting **iOS / Android**.
 It ships both an **embedded widget** and a **full-screen dialog**, sharing a single Dart API across
-all platforms.
+both platforms.
 
 - `DxCaptcha` — a single widget you can drop into your tree to render the CAPTCHA
 - `DxCaptcha.show(context)` — one line to present the CAPTCHA in a dialog, returning a structured
@@ -15,16 +15,15 @@ all platforms.
 
 ## Platform support
 
-| Capability          | iOS | Android | Web | Desktop     |
-|---------------------|-----|---------|-----|-------------|
-| Embedded widget     | ✅  | ✅      | ✅  | Placeholder |
-| Dialog mode         | ✅  | ✅      | ✅  | Placeholder |
-| Chinese / English   | ✅  | ✅      | ✅  | —           |
-| Private `apiServer` | ✅  | ✅      | ✅  | —           |
+| Capability          | iOS | Android | Desktop     |
+|---------------------|-----|---------|-------------|
+| Embedded widget     | ✅  | ✅      | Placeholder |
+| Dialog mode         | ✅  | ✅      | Placeholder |
+| Chinese / English   | ✅  | ✅      | —           |
+| Private `apiServer` | ✅  | ✅      | —           |
 
 - iOS: `dx-captcha.xcframework` v5.4.18r (bundled with the plugin)
 - Android: `dx-captcha-without-risk-v5.4.27r.aar` bundled; minimal mode by default (no risk SDK)
-- Web: the v5 JS SDK is loaded automatically from the DingXiang CDN — no manual `<script>` needed
 
 ## Requirements
 
@@ -139,16 +138,6 @@ The plugin already includes:
 > `packageCandidates` / `viewClassCandidates` at the top of
 > `android/src/main/kotlin/com/kjxbyz/plugins/dxcaptcha_flutter/DxCaptchaSdkBridge.kt`.
 
-### Web
-
-Nothing to configure — the plugin injects this on first use:
-
-```html
-<script src="https://cdn.dingxiang-inc.com/ctu-group/captcha-ui/v5/index.js"></script>
-```
-
-To use a custom CDN (for example an intranet proxy), set `config.extra['scriptUrl']`.
-
 ## Quick start
 
 ### Embedded mode
@@ -156,18 +145,19 @@ To use a custom CDN (for example an intranet proxy), set `config.extra['scriptUr
 ```dart
 import 'package:dxcaptcha_flutter/dxcaptcha_flutter.dart';
 
-DxCaptcha(
-  config: const DxCaptchaConfig(
-    appId: 'your-app-id',
-    language: DxCaptchaLanguage.zh,
-  ),
-  onSuccess: (DxCaptchaResult result) {
-    // Send this token to your backend for server-side verification
-    print('token: ${result.token}');
-  },
-  onFail: (DxCaptchaResult result) {
-    print('failed: ${result.message}');
-  },
+DxCaptcha
+(
+config: const DxCaptchaConfig(
+appId: 'your-app-id',
+language: DxCaptchaLanguage.zh,
+),
+onSuccess: (DxCaptchaResult result) {
+// Send this token to your backend for server-side verification
+print('token: ${result.token}');
+},
+onFail: (DxCaptchaResult result) {
+print('failed: ${result.message}');
+},
 )
 ```
 
@@ -177,32 +167,37 @@ The widget lays out at a default `362 : 335` aspect ratio; override it with
 ### Dialog mode
 
 ```dart
-final DxCaptchaResult? result = await DxCaptcha.show(
-  context,
-  config: const DxCaptchaConfig(appId: 'your-app-id'),
-  title: 'Security check',
-  description: 'Slide to verify to continue',
-  timeout: const Duration(minutes: 2),
+
+final DxCaptchaResult? result = await
+DxCaptcha.show
+(
+context,
+config: const DxCaptchaConfig(appId: 'your-app-id'),
+title: 'Security check',
+description: 'Slide to verify to continue',
+timeout: const Duration(minutes: 2),
 );
 
 if (result == null) {
-  // The user dismissed the dialog
+// The user dismissed the dialog
 } else if (result.isSuccess) {
-  await login(result.token!);
+await login(result.token!);
 } else {
-  // result.message holds the failure reason; the dialog already offers "Retry"
+// result.message holds the failure reason; the dialog already offers "Retry"
 }
 ```
 
 ### Controller: state and retry
 
 ```dart
+
 final DxCaptchaController controller = DxCaptchaController();
 
-DxCaptcha(
-  config: config,
-  controller: controller,
-  onSuccess: (result) => print(result.token),
+DxCaptcha
+(
+config: config,
+controller: controller,
+onSuccess: (result) => print(result.token),
 );
 
 // Read the state
@@ -213,7 +208,11 @@ await controller.reload();
 
 // Await the next result (resolves on both success and failure)
 final result = await controller.waitForResult(
-  timeout: const Duration(minutes: 1),
+timeout: const Duration(minutes
+:
+1
+)
+,
 );
 ```
 
@@ -221,22 +220,21 @@ final result = await controller.waitForResult(
 
 ### DxCaptchaConfig
 
-| Parameter        | Type                 | Description                                                       |
-|------------------|----------------------|-------------------------------------------------------------------|
-| `appId`          | `String`             | Required; from App Management in the DingXiang console            |
-| `apiServer`      | `String?`            | Private deployment domain; leave empty for SaaS                   |
-| `language`       | `DxCaptchaLanguage?` | `zh` / `en`                                                       |
-| `style`          | `DxCaptchaStyle`     | Web only: `embed` / `inline` / `popup` / `oneclick`               |
-| `width`          | `int?`               | Widget width in pixels                                            |
-| `bgColor`        | `String?`            | Widget background color, e.g. `#FFFFFF`                           |
-| `customStyle`    | `Map`                | Maps to the SDK's `customStyle`                                   |
-| `customLanguage` | `Map`                | Maps to the SDK's `customLanguage`                                |
-| `timeout`        | `Duration?`          | Request timeout, 6 seconds by default                             |
-| `showVoice`      | `bool?`              | Whether to expose the voice verification entry                    |
-| `privacy`        | `DxCaptchaPrivacy`   | Data collection whitelist: `minimal` / `full`                     |
-| `enableCache`    | `bool`               | Cache frictionless results (ignored on iOS)                       |
-| `enableRiskSdk`  | `bool`               | Load the fingerprint (risk) SDK; default `false` (minimal usage)  |
-| `extra`          | `Map`                | Passthrough params such as private `keyURL`, `ua_js`, `scriptUrl` |
+| Parameter        | Type                 | Description                                                      |
+|------------------|----------------------|------------------------------------------------------------------|
+| `appId`          | `String`             | Required; from App Management in the DingXiang console           |
+| `apiServer`      | `String?`            | Private deployment domain; leave empty for SaaS                  |
+| `language`       | `DxCaptchaLanguage?` | `zh` / `en`                                                      |
+| `width`          | `int?`               | Widget width in pixels                                           |
+| `bgColor`        | `String?`            | Widget background color, e.g. `#FFFFFF`                          |
+| `customStyle`    | `Map`                | Maps to the SDK's `customStyle`                                  |
+| `customLanguage` | `Map`                | Maps to the SDK's `customLanguage`                               |
+| `timeout`        | `Duration?`          | Request timeout, 6 seconds by default                            |
+| `showVoice`      | `bool?`              | Whether to expose the voice verification entry                   |
+| `privacy`        | `DxCaptchaPrivacy`   | Data collection whitelist: `minimal` / `full`                    |
+| `enableCache`    | `bool`               | Cache frictionless results (ignored on iOS)                      |
+| `enableRiskSdk`  | `bool`               | Load the fingerprint (risk) SDK; default `false` (minimal usage) |
+| `extra`          | `Map`                | Passthrough params such as private `keyURL`, `ua_js`             |
 
 ### DxCaptchaResult
 
@@ -264,7 +262,6 @@ and `pass-by-server` into the same enum.
 ```bash
 cd example
 fvm flutter run           # pick an iOS / Android device
-fvm flutter run -d chrome # Web
 ```
 
 The example includes an appId field, a Chinese/English switch, embedded/dialog switching,
@@ -287,8 +284,8 @@ device cannot connect to `apiServer` directly. Check connectivity or the private
 configuration.
 
 **iOS shows a blank (white) CAPTCHA area**
-The DingXiang SDK loads `DXCaptcha.bundle` from the app bundle root
-(`[NSBundle mainBundle]`). If the bundle is missing the WKWebView loads an
+The DingXiang SDK loads `DXCaptcha.bundle` from the app bundle root (`[NSBundle mainBundle]`). If
+the bundle is missing the WKWebView loads an
 empty page and the area stays white. Verify the bundle exists in the built
 app:
 

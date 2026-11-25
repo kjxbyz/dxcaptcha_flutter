@@ -15,7 +15,7 @@
 static NSString *const kDxCaptchaViewType = @"dxcaptcha_flutter/view";
 static NSString *const kDxCaptchaChannelPrefix = @"dxcaptcha_flutter/view_";
 
-/// iOS SDK 认识的配置键，其余键（style / width / privacy 等）仅 Web、Android 使用。
+/// iOS SDK 认识的配置键，其余键（width / privacy 等）仅 Android 使用。
 static NSSet<NSString *> *DxCaptchaAllowedConfigKeys(void) {
   static NSSet<NSString *> *keys;
   static dispatch_once_t onceToken;

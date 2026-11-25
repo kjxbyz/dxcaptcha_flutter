@@ -142,7 +142,7 @@ class _UnsupportedPlatformView extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.all(12),
             child: Text(
-              '顶象验证码暂不支持当前平台，请使用 iOS / Android / Web。',
+              '顶象验证码暂不支持当前平台，请使用 iOS / Android。',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 12, color: Color(0xFF8A8A8A)),
             ),

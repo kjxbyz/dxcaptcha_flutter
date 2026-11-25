@@ -11,7 +11,7 @@ Pod::Spec.new do |s|
   s.version          = '0.1.0'
   s.summary          = '顶象无感验证码 Flutter 插件'
   s.description      = <<-DESC
-顶象无感验证码（DingXiang Captcha）Flutter 插件，支持 iOS / Android / Web，
+顶象无感验证码（DingXiang Captcha）Flutter 插件，支持 iOS / Android，
 提供嵌入组件与全屏弹窗两种接入方式。
                        DESC
   s.homepage         = 'https://www.dingxiang-inc.com/docs/detail/captcha'
