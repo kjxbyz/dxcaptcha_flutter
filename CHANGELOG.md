@@ -1,5 +1,10 @@
 # ChangeLog
 
+## 0.0.2-dev.1
+
+* 移除 Web 平台支持
+* 新增粤语界面语言（`DxCaptchaLanguage.yue`），示例语言切换改为 中文 / 粤语 / English 三选
+
 ## 0.0.2-dev.0
 
 * 新增 `DxCaptcha` 嵌入组件与 `DxCaptcha.show()` 弹窗模式，三端共用一套 API

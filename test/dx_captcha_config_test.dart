@@ -63,6 +63,17 @@ void main() {
       expect(copy.enableRiskSdk, false);
     });
 
+    test('语言枚举序列化为 SDK 取值', () {
+      expect(DxCaptchaLanguage.zh.value, 'cn');
+      expect(DxCaptchaLanguage.en.value, 'en');
+      expect(DxCaptchaLanguage.yue.value, 'yue');
+      const DxCaptchaConfig config = DxCaptchaConfig(
+        appId: 'app-id',
+        language: DxCaptchaLanguage.yue,
+      );
+      expect(config.toMap()['language'], 'yue');
+    });
+
     test('copyWith 可覆盖 enableRiskSdk', () {
       const DxCaptchaConfig base = DxCaptchaConfig(appId: 'app-id');
       expect(base.copyWith(enableRiskSdk: true).enableRiskSdk, true);

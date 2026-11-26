@@ -11,7 +11,7 @@ Dart API across both platforms.
   structured result
 - `DxCaptchaController` — state tracking, retry after failure, token access
 - Normalized events — platform-specific event name differences are handled inside the plugin
-- Built-in loading/error placeholders, Chinese/English UI, and private-deployment passthrough
+- Built-in loading/error placeholders, Chinese/Cantonese/English UI, and private-deployment passthrough
 
 ## Platform support
 
@@ -19,7 +19,7 @@ Dart API across both platforms.
 | ------------------- | :-: | :-----: |
 | Embedded widget     | ✅  |   ✅    |
 | Dialog mode         | ✅  |   ✅    |
-| Chinese / English   | ✅  |   ✅    |
+| Chinese / English / Cantonese | ✅  |   ✅    |
 | Private `apiServer` | ✅  |   ✅    |
 
 - iOS: `dx-captcha.xcframework` v5.4.18r (bundled with the plugin)
@@ -198,7 +198,7 @@ final result = await controller.waitForResult(
 | ---------------- | -------------------- | ---------------------------------------------------------------- |
 | `appId`          | `String`             | Required; from App Management in the DingXiang console           |
 | `apiServer`      | `String?`            | Private deployment domain; leave empty for SaaS                  |
-| `language`       | `DxCaptchaLanguage?` | `zh` / `en`                                                      |
+| `language`       | `DxCaptchaLanguage?` | `zh` / `yue` / `en`                                              |
 | `width`          | `int?`               | Widget width in pixels                                           |
 | `bgColor`        | `String?`            | Widget background color, e.g. `#FFFFFF`                          |
 | `customStyle`    | `Map`                | Maps to the SDK's `customStyle`                                  |
@@ -238,7 +238,7 @@ cd example
 fvm flutter run # pick an iOS / Android device
 ```
 
-The example includes an appId field, a Chinese/English switch, embedded/dialog switching,
+The example includes an appId field, a Chinese/Cantonese/English switch, embedded/dialog switching,
 an event log, and token display.
 
 ## Troubleshooting
