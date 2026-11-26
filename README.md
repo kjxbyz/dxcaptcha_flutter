@@ -16,15 +16,16 @@ Dart API across all platforms.
 
 ## Platform support
 
-| Capability          | iOS | Android |
-| ------------------- | :-: | :-----: |
-| Embedded widget     | ✅  |   ✅    |
-| Dialog mode         | ✅  |   ✅    |
-| Chinese / English / Cantonese | ✅  |   ✅    |
-| Private `apiServer` | ✅  |   ✅    |
+| Capability          | iOS | Android | OpenHarmony |
+| ------------------- | :-: | :-----: | :---------: |
+| Embedded widget     | ✅  |   ✅    |     ✅      |
+| Dialog mode         | ✅  |   ✅    |     ✅      |
+| Chinese / English / Cantonese | ✅  |   ✅    |     ✅      |
+| Private `apiServer` | ✅  |   ✅    |     ✅      |
 
 - iOS: `dx-captcha.xcframework` v5.4.18r (bundled with the plugin)
 - Android: `dx-captcha-without-risk-v5.4.27r.aar` bundled; minimal mode by default (no risk SDK)
+- OpenHarmony: `dx-captcha.har` v5.4.18r (bundled); requires the Flutter-OH toolchain
 
 ## Requirements
 
@@ -107,10 +108,21 @@ Notes:
 - The plugin har already declares the `ohos.permission.INTERNET` permission.
 - `protocol` is required for DingXiang SDK versions below v5.4.21; the plugin
   injects `https:` by default and it can be overridden via `extra`.
-- To run the example app: under the Flutter-OH environment, run
-  `cd example && flutter create . --platforms ohos` to generate the
-  `example/ohos` host project, configure signing in DevEco Studio, then
-  `flutter run -d <deviceId>` or `flutter build hap --release`.
+- The DingXiang SDK har (`dx.captcha`) is a bytecode HAR, which requires the
+  host project to enable `useNormalizedOHMUrl`. `example/ohos/build-profile.json5`
+  already enables it under `app.products[].buildOption.strictMode` (newly
+  created projects in DevEco Studio 5.0.3.800+ default to it as well).
+- The example ships with a pre-built `example/ohos` host project (entry module
+  wired to FlutterAbility). Under the Flutter-OH environment, open
+  `example/ohos` in DevEco Studio to configure signing, then run
+  `cd example && flutter run -d <deviceId>` or `flutter build hap --release`.
+
+> **Known limitation:** the CAPTCHA does not run reliably on the HarmonyOS
+> emulator (ArkWeb combined with Flutter-OH platform views hits a crash in the
+> emulator's graphics stack). **Use a real device for verification.** Every
+> frame of that crash comes from `/system/lib64/` system libraries — there are
+> no application, plugin or SDK frames, so there is nothing to fix on the
+> plugin side.
 
 ### Android
 
@@ -124,18 +136,11 @@ dxcaptcha_flutter/
     └── dx-captcha-without-risk-v5.4.27r.aar   # CAPTCHA SDK
 ```
 
-> **About "without-risk" and the risk SDK**
-> Verified by decompiling: "without-risk" only means the risk SDK is not packaged inside
-> and must be provided by the integrator. When `DXKeyRiskEnable` defaults to true, the
-> bytecode of `startToLoad`, `setAllowPrivacyList` and the token path call
-> `com.dx.mobile.risk.DXRisk` directly — without that class they throw
-> `NoClassDefFoundError`.
-> The plugin follows the official minimal-usage config and disables risk by default:
-> with `enableRiskSdk: false` it passes `DXKeyRiskEnable=false` (do not load the
-> fingerprint SDK) and `wait_for_const_id_sdk=false` (tell the server not to wait for the
-> fingerprint), and skips `setAllowPrivacyList` (also omitted in the official minimal
-> example). No risk-related dependency is needed in this mode. The trade-off is losing
-> the security hardening provided by device fingerprinting.
+> **About "without-risk"**: the aar does not bundle the device-fingerprint (risk)
+> SDK — it must be supplied by the integrator. The plugin therefore follows the
+> official minimal-usage config and disables risk by default
+> (`enableRiskSdk: false`), so no risk dependency is needed. Enabling it trades
+> that simplicity for the extra security hardening of device fingerprinting.
 
 To enable risk hardening:
 
@@ -188,7 +193,10 @@ DxCaptcha(
 ```
 
 The widget lays out at a default `362 : 335` aspect ratio; override it with
-`width` / `height` / `aspectRatio`.
+`width` / `height` / `aspectRatio`. On OpenHarmony, when
+`DxCaptchaConfig.width` is not set, the plugin passes the laid-out container
+width to the SDK as its design width so the CAPTCHA renders at the container
+size; pass `width` explicitly to pin a fixed size.
 
 ### Dialog mode
 
@@ -320,7 +328,8 @@ SDK may request resources over `http`, which gets blocked by ATS. The plugin inj
 `https:` by default; override it via `extra: {'protocol': 'https:'}` if needed.
 
 **iOS linker error `Undefined symbol: _OBJC_CLASS_$_DXCaptchaViewV5`**
-See "Path issue with symlinked plugins" above.
+Make sure `ios/Frameworks/dx-captcha.xcframework` is present, then re-run
+`pod install` so CocoaPods links the vendored framework into the Runner target.
 
 **OpenHarmony build or runtime issues**
 - Building for ohos requires the Flutter-OH adapted toolchain; the standard
@@ -329,8 +338,8 @@ See "Path issue with symlinked plugins" above.
   DingXiang endpoints and check the `apiServer` config. The plugin injects
   `protocol: https:` automatically; override it via `extra` for private
   deployments;
-- For on-device debugging, open `example/ohos` in DevEco Studio (generate it
-  first with `flutter create . --platforms ohos`) and set up signing.
+- For on-device debugging, open the bundled `example/ohos` in DevEco Studio
+  and set up signing.
 
 ## License
 

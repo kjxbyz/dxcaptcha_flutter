@@ -13,15 +13,16 @@
 
 ## 平台支持
 
-| 能力             | iOS | Android |
-| ---------------- | :-: | :-----: |
-| 嵌入组件         | ✅  |   ✅    |
-| 弹窗模式         | ✅  |   ✅    |
-| 中文 / 英文 / 粤语 | ✅  |   ✅    |
-| 私有化 apiServer | ✅  |   ✅    |
+| 能力             | iOS | Android | OpenHarmony |
+| ---------------- | :-: | :-----: | :---------: |
+| 嵌入组件         | ✅  |   ✅    |     ✅      |
+| 弹窗模式         | ✅  |   ✅    |     ✅      |
+| 中文 / 英文 / 粤语 | ✅  |   ✅    |     ✅      |
+| 私有化 apiServer | ✅  |   ✅    |     ✅      |
 
 - iOS：`dx-captcha.xcframework` v5.4.18r（已随插件内置）
 - Android：`dx-captcha-without-risk-v5.4.27r.aar`（已随插件内置，默认最小化模式不集成风控）
+- OpenHarmony：`dx-captcha.har` v5.4.18r（已内置，需 Flutter-OH 工具链）
 
 ## 环境要求
 
@@ -101,10 +102,19 @@ dxcaptcha_flutter/
 - 插件 har 的 `module.json5` 已声明 `ohos.permission.INTERNET`。
 - 顶象鸿蒙 SDK < v5.4.21 时 `protocol` 参数必填，插件已默认注入 `https:`，
   可通过 `extra: {'protocol': ...}` 覆盖。
-- 示例工程运行：在 Flutter-OH 环境下执行
-  `cd example && flutter create . --platforms ohos` 生成 `example/ohos`
-  宿主工程，然后用 DevEco Studio 配置签名后 `flutter run -d <deviceId>`，
-  或直接 `flutter build hap --release` 构建产物。
+- 顶象鸿蒙 SDK（`dx.captcha` har）为字节码 HAR，要求宿主工程开启
+  `useNormalizedOHMUrl`；`example/ohos/build-profile.json5` 已在
+  `app.products[].buildOption.strictMode` 中默认开启（DevEco Studio
+  5.0.3.800+ 新建工程亦默认开启）。
+- 示例工程 `example/ohos` 已内置（entry 模块 + FlutterAbility 接入）。
+  在 Flutter-OH 环境下用 DevEco Studio 打开 `example/ohos` 配置签名后
+  `flutter run -d <deviceId>`，或直接 `flutter build hap --release`
+  构建产物。
+
+> **已知限制：HarmonyOS 模拟器上验证码无法稳定运行**（ArkWeb 与 Flutter-OH
+> 平台视图组合会触发模拟器图形栈的系统侧 native 崩溃），**请使用真机验证**。
+> 该崩溃的调用栈全部来自 `/system/lib64/` 系统库，没有应用、插件或 SDK
+> 的代码帧，插件侧没有修复手段。
 
 ### Android
 
@@ -117,15 +127,9 @@ dxcaptcha_flutter/
     └── dx-captcha-without-risk-v5.4.27r.aar   # 验证码 SDK
 ```
 
-> **关于 "without-risk" 与风控 SDK**
-> 实测反编译确认：`dx-captcha-without-risk` 的 "without-risk" 只是「不打包风控 SDK，
-> 由接入方自行提供」——`DXKeyRiskEnable` 默认为 true 时，`startToLoad` 内部、
-> `setAllowPrivacyList` 与 token 获取链路在字节码层都会调用
-> `com.dx.mobile.risk.DXRisk`，缺少该类时抛 `NoClassDefFoundError`。
-> 插件按官方「最小化使用」配置默认关闭风控：`enableRiskSdk: false` 时自动传入
-> `DXKeyRiskEnable=false`（不加载设备指纹 SDK）与 `wait_for_const_id_sdk=false`
-> （通知服务端不等待设备指纹），并跳过 `setAllowPrivacyList` 调用（官方最小化示例
-> 同样省略），此时无需任何 risk 相关依赖。代价是失去设备指纹的安全增强能力。
+> **关于 "without-risk"**：该 aar 不内置设备指纹（风控）SDK，需接入方自行提供。
+> 插件按官方「最小化使用」默认关闭风控（`enableRiskSdk: false`），此时无需
+> 任何 risk 依赖；开启后可获得设备指纹的安全增强，但需自行补齐对应 aar。
 
 需要风控增强时：
 
@@ -175,6 +179,9 @@ DxCaptcha(
 ```
 
 组件默认按 `362 : 335` 的宽高比布局，可用 `width` / `height` / `aspectRatio` 覆盖。
+OpenHarmony 下插件会自动把布局后的容器宽度作为 SDK 设计宽度下发（未显式
+指定 `DxCaptchaConfig.width` 时），使验证码内容按容器尺寸渲染；如需固定尺寸，
+自行传入 `width` 即可。
 
 ### 弹窗模式
 
@@ -301,14 +308,14 @@ v5.4.21 时该参数必填，缺失时 SDK 可能按 `http` 请求资源被 ATS 
 注入默认值 `https:`，如需覆盖可通过 `extra: {'protocol': 'https:'}` 传入。
 
 **iOS 链接报 `Undefined symbol: _OBJC_CLASS_$_DXCaptchaViewV5`**
-见上文「符号链接插件的路径问题」。
+确认 `ios/Frameworks/dx-captcha.xcframework` 存在，并重新执行 `pod install`
+让 CocoaPods 把该 vendored framework 链接进 Runner target。
 
 **OpenHarmony 构建或运行问题**
 - 鸿蒙支持需使用 Flutter-OH 适配版工具链，标准 Flutter SDK 无法构建 hap；
 - 运行时白屏或加载失败：确认设备网络可访问顶象服务，检查 `apiServer` 配置；
   插件已自动注入 `protocol: https:`，私有化部署可通过 `extra` 覆盖；
-- 真机调试请在 DevEco Studio 中打开 `example/ohos`（先执行
-  `flutter create . --platforms ohos` 生成）并配置签名。
+- 真机调试请在 DevEco Studio 中打开仓库内置的 `example/ohos` 并配置签名。
 
 ## License
 

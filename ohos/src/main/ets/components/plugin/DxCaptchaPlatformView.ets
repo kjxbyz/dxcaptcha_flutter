@@ -25,13 +25,17 @@ import {
   MethodCall,
   MethodCallHandler,
   MethodChannel,
-  MethodResult
+  MethodResult,
+  StandardMethodCodec
 } from '@ohos/flutter_ohos';
-import StandardMessageCodec from '@ohos/flutter_ohos/src/main/ets/plugin/common/StandardMessageCodec';
 import PlatformView, { Params } from '@ohos/flutter_ohos/src/main/ets/plugin/platform/PlatformView';
 import { BinaryMessenger } from '@ohos/flutter_ohos/src/main/ets/plugin/common/BinaryMessenger';
 import common from '@ohos.app.ability.common';
-import { CaptchaViewV5, CaptchaViewController, CaptchaViewControllerImpl } from 'dx.captcha';
+import { HashMap } from '@kit.ArkTS';
+import { CaptchaViewV5, CaptchaViewController } from 'dx.captcha';
+// CaptchaViewControllerImpl 未从 dx.captcha 的 index 导出，走包内声明路径导入
+// （字节码 HAR 内保留了该模块的 normalized OHM URL，按路径解析可用）。
+import { CaptchaViewControllerImpl } from 'dx.captcha/src/main/g/Captcha/h';
 
 const TAG: string = 'DxCaptchaPlatformView';
 
@@ -51,8 +55,34 @@ const DX_SDK_DEFAULT_WIDTH: number = 362;
 const RESERVED_KEYS: string[] = [
   'appId', 'apiServer', 'language', 'cacheStorage', 'timeout',
   'showVoice', 'customStyle', 'customLanguage', 'bgColor',
-  'style', 'privacy', 'enableRiskSdk', 'enableCache'
+  // width 由插件消费为 SDK 设计宽度（controller.width），不参与 extra 透传，
+  // 与 Android 端 DxCaptchaSdkBridge 的 reserved 集合保持一致。
+  'width', 'style', 'privacy', 'enableRiskSdk', 'enableCache'
 ];
+
+/**
+ * StandardMessageCodec 在 Flutter-OH 侧把 MAP 解码成 ArkTS `Map`（`new Map()`），
+ * 不是普通对象，不能用 `config['appId']` 下标取值。这里递归转成
+ * Record/Array，使配置读取与 Android 端 `args as? Map<String, Any?>` 一致。
+ * 嵌套值（customStyle / extra 等）同样是 Map，需一并转换。
+ */
+function toPlainValue(value: ESObject): ESObject {
+  if (value instanceof Map) {
+    const record: Record<string, ESObject> = {};
+    (value as Map<ESObject, ESObject>).forEach((item: ESObject, key: ESObject): void => {
+      record[key as string] = toPlainValue(item);
+    });
+    return record;
+  }
+  if (value instanceof Array) {
+    const list: ESObject[] = [];
+    (value as ESObject[]).forEach((item: ESObject): void => {
+      list.push(toPlainValue(item));
+    });
+    return list;
+  }
+  return value;
+}
 
 @Component
 export struct DxCaptchaComponent {
@@ -86,8 +116,8 @@ export class DxCaptchaPlatformView extends PlatformView implements MethodCallHan
   /** 引擎注入的应用上下文，供 SDK 资源管理器初始化使用。 */
   private context: common.Context;
 
-  /** Dart 侧下发的创建参数（DxCaptchaConfig.toMap() 解码结果）。 */
-  private config: ESObject;
+  /** Dart 侧下发的创建参数（DxCaptchaConfig.toMap() 解码并归一化后的对象）。 */
+  private config: Record<string, ESObject>;
 
   /** 顶象 SDK 视图控制器，组件渲染时被 CaptchaViewV5 消费。 */
   public controller: CaptchaViewControllerImpl;
@@ -98,9 +128,18 @@ export class DxCaptchaPlatformView extends PlatformView implements MethodCallHan
   constructor(context: common.Context, viewId: number, args: ESObject, messenger: BinaryMessenger) {
     super();
     this.context = context;
-    this.config = args;
-    this.controller = new CaptchaViewControllerImpl(DX_SDK_UI_VERSION, DX_SDK_DEFAULT_WIDTH);
-    this.channel = new MethodChannel(messenger, `${DX_CAPTCHA_CHANNEL_PREFIX}${viewId}`, StandardMessageCodec.INSTANCE);
+    this.config = (toPlainValue(args) ?? {}) as Record<string, ESObject>;
+    // SDK 按「设计宽度」生成 WebView 内容，CaptchaViewV5 在 aboutToAppear 阶段
+    // 就会消费该宽度。必须在构造 controller 时就用 Dart 侧下发的容器宽度，
+    // 否则首帧仍按默认 362 布局，内容超出容器后被 Texture 模式裁切
+    // （标题首字、底部标识被截断），后续再改 controller.width 已无法重排。
+    const widthValue: ESObject = this.config['width'];
+    let initialWidth: number = DX_SDK_DEFAULT_WIDTH;
+    if (typeof widthValue === 'number' && (widthValue as number) > 0) {
+      initialWidth = widthValue as number;
+    }
+    this.controller = new CaptchaViewControllerImpl(DX_SDK_UI_VERSION, initialWidth);
+    this.channel = new MethodChannel(messenger, `${DX_CAPTCHA_CHANNEL_PREFIX}${viewId}`, StandardMethodCodec.INSTANCE);
     this.channel.setMethodCallHandler(this);
   }
 
@@ -137,8 +176,14 @@ export class DxCaptchaPlatformView extends PlatformView implements MethodCallHan
       if (impl.initResMgr) {
         impl.initResMgr(this.context.resourceManager);
       }
-      const config: ESObject = this.config ?? {};
+      const config: Record<string, ESObject> = this.config;
       const appId: string = (config['appId'] as string) ?? '';
+      if (!appId) {
+        // appId 为空时 SDK 会直接抛异常导致宿主崩溃，先回传给 Dart 侧展示错误。
+        this.sendError('invalid_app_id', 'appId 为空，请检查创建参数是否正确传递');
+        return;
+      }
+      console.info(`${TAG} init with appId length=${appId.length}, config keys=${Object.keys(config).length}`);
       view.init(appId);
       view.initConfig(this.buildSdkConfig(config));
       view.startToLoad(this.sdkEventListener, 'success', 'fail');
@@ -162,7 +207,7 @@ export class DxCaptchaPlatformView extends PlatformView implements MethodCallHan
   }
 
   /** 释放资源：移除方法通道处理器。SDK 视图随组件销毁由引擎回收。 */
-  private dispose(): void {
+  public dispose(): void {
     if (this.disposed) {
       return;
     }
@@ -171,15 +216,14 @@ export class DxCaptchaPlatformView extends PlatformView implements MethodCallHan
   }
 
   /** SDK 事件监听器：把事件与负载转发给 Dart 层（onEvent）。 */
-  private sdkEventListener = (event: string, args: ESObject): void => {
+  private sdkEventListener = (event: string, args: HashMap<string, ESObject>): void => {
     if (this.disposed || !event) {
       return;
     }
     const payload: Record<string, ESObject> = { 'event': event };
     try {
-      const map = args as HashMap<string, ESObject>;
-      if (map) {
-        map.forEach((value: ESObject, key: string): void => {
+      if (args) {
+        args.forEach((value: ESObject, key: string): void => {
           payload[key] = value;
         });
       }
@@ -193,7 +237,7 @@ export class DxCaptchaPlatformView extends PlatformView implements MethodCallHan
   }
 
   /** 把 Dart 配置转换为 SDK 的 initConfig 参数（对齐 Android 端桥接）。 */
-  private buildSdkConfig(config: ESObject): Record<string, ESObject> {
+  private buildSdkConfig(config: Record<string, ESObject>): Record<string, ESObject> {
     const result: Record<string, ESObject> = {};
 
     const appId: string = config['appId'];
