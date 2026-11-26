@@ -49,7 +49,7 @@ class _CaptchaDemoPageState extends State<CaptchaDemoPage> {
   final List<String> _logs = <String>[];
 
   bool _popupMode = false;
-  bool _english = false;
+  DxCaptchaLanguage _language = DxCaptchaLanguage.zh;
   String? _token;
   String? _lastFailure;
 
@@ -80,7 +80,7 @@ class _CaptchaDemoPageState extends State<CaptchaDemoPage> {
     appId: _appIdController.text.trim().isEmpty
         ? _defaultAppId
         : _appIdController.text.trim(),
-    language: _english ? DxCaptchaLanguage.en : DxCaptchaLanguage.zh,
+    language: _language,
   );
 
   void _log(String message) {
@@ -166,11 +166,42 @@ class _CaptchaDemoPageState extends State<CaptchaDemoPage> {
                     subtitle: const Text('关闭时使用嵌入组件'),
                   ),
                   const Divider(height: 1),
-                  SwitchListTile(
-                    value: _english,
-                    onChanged: (bool value) => setState(() => _english = value),
-                    title: const Text('英文界面'),
-                    subtitle: const Text('language: en'),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        const Text('验证码语言'),
+                        const SizedBox(height: 8),
+                        SegmentedButton<DxCaptchaLanguage>(
+                          segments: const <ButtonSegment<DxCaptchaLanguage>>[
+                            ButtonSegment<DxCaptchaLanguage>(
+                              value: DxCaptchaLanguage.zh,
+                              label: Text('中文'),
+                            ),
+                            ButtonSegment<DxCaptchaLanguage>(
+                              value: DxCaptchaLanguage.yue,
+                              label: Text('粤语'),
+                            ),
+                            ButtonSegment<DxCaptchaLanguage>(
+                              value: DxCaptchaLanguage.en,
+                              label: Text('English'),
+                            ),
+                          ],
+                          selected: <DxCaptchaLanguage>{_language},
+                          onSelectionChanged:
+                              (Set<DxCaptchaLanguage> selection) =>
+                                  setState(() => _language = selection.first),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'language: ${_language.value}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

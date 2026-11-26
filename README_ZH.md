@@ -9,7 +9,7 @@
 - `DxCaptcha.show(context)` 一行代码弹出验证，返回结构化结果
 - `DxCaptchaController` 管理状态、失败重试、读取 token
 - 事件归一化：iOS / Android / OpenHarmony 的事件名差异由插件内部抹平
-- 内置加载/错误占位、中文/英文界面、私有化部署参数透传
+- 内置加载/错误占位、中文/粤语/英文界面、私有化部署参数透传
 
 ## 平台支持
 
@@ -17,7 +17,7 @@
 | ---------------- | :-: | :-----: |
 | 嵌入组件         | ✅  |   ✅    |
 | 弹窗模式         | ✅  |   ✅    |
-| 中文 / 英文      | ✅  |   ✅    |
+| 中文 / 英文 / 粤语 | ✅  |   ✅    |
 | 私有化 apiServer | ✅  |   ✅    |
 
 - iOS：`dx-captcha.xcframework` v5.4.18r（已随插件内置）
@@ -227,7 +227,7 @@ final result = await controller.waitForResult(
 | ---------------- | -------------------- | ------------------------------------------------------- |
 | `appId`          | `String`             | 必填，顶象控制台应用管理获取                            |
 | `apiServer`      | `String?`            | 私有化部署域名，SaaS 留空                               |
-| `language`       | `DxCaptchaLanguage?` | `zh` / `en`                                             |
+| `language`       | `DxCaptchaLanguage?` | `zh` / `yue` / `en`                                     |
 | `width`          | `int?`               | 验证码控件宽度（像素）                                  |
 | `bgColor`        | `String?`            | 控件背景色，如 `#FFFFFF`                                |
 | `customStyle`    | `Map`                | 对应 SDK `customStyle`                                  |
@@ -267,7 +267,7 @@ cd example
 fvm flutter run # 选择 iOS / Android 设备
 ```
 
-示例包含 appId 输入、中英文切换、嵌入/弹窗切换、事件日志与 token 展示。
+示例包含 appId 输入、中文/粤语/英文切换、嵌入/弹窗切换、事件日志与 token 展示。
 
 ## 常见问题
 

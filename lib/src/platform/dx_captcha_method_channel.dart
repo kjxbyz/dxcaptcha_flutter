@@ -37,33 +37,32 @@ class MethodChannelDxCaptcha extends DxCaptchaPlatform {
         },
       );
     }
-    switch (defaultTargetPlatform) {
-      case TargetPlatform.android:
-        return AndroidView(
-          viewType: viewType,
-          creationParams: params.config.toMap(),
-          creationParamsCodec: const StandardMessageCodec(),
-          onPlatformViewCreated: (int id) => bindView(id, params),
-          gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-            Factory<OneSequenceGestureRecognizer>(EagerGestureRecognizer.new),
-          },
-        );
-      case TargetPlatform.iOS:
-        return UiKitView(
-          viewType: viewType,
-          creationParams: params.config.toMap(),
-          creationParamsCodec: const StandardMessageCodec(),
-          onPlatformViewCreated: (int id) => bindView(id, params),
-          gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-            Factory<OneSequenceGestureRecognizer>(EagerGestureRecognizer.new),
-          },
-        );
-      case TargetPlatform.macOS:
-      case TargetPlatform.windows:
-      case TargetPlatform.linux:
-      case TargetPlatform.fuchsia:
-        return const _UnsupportedPlatformView();
+
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return AndroidView(
+        viewType: viewType,
+        creationParams: params.config.toMap(),
+        creationParamsCodec: const StandardMessageCodec(),
+        onPlatformViewCreated: (int id) => bindView(id, params),
+        gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+          Factory<OneSequenceGestureRecognizer>(EagerGestureRecognizer.new),
+        },
+      );
     }
+
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      return UiKitView(
+        viewType: viewType,
+        creationParams: params.config.toMap(),
+        creationParamsCodec: const StandardMessageCodec(),
+        onPlatformViewCreated: (int id) => bindView(id, params),
+        gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+          Factory<OneSequenceGestureRecognizer>(EagerGestureRecognizer.new),
+        },
+      );
+    }
+
+    return const _UnsupportedPlatformView();
   }
 
   void bindView(int viewId, DxCaptchaViewParams params) {

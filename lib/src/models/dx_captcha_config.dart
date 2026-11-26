@@ -4,7 +4,10 @@ enum DxCaptchaLanguage {
   zh('cn'),
 
   /// 英文（SDK 取值 `en`）。
-  en('en');
+  en('en'),
+
+  /// 粤语（SDK 取值 `yue`）。
+  yue('yue');
 
   const DxCaptchaLanguage(this.value);
 
