@@ -1,5 +1,5 @@
 name: dxcaptcha_flutter
-description: "顶象无感验证码（DingXiang Captcha）Flutter 插件，支持 iOS / Android，提供嵌入 Widget 与弹窗两种接入方式。"
+description: "顶象无感验证码（DingXiang Captcha）Flutter 插件，支持 iOS / Android / OpenHarmony，提供嵌入 Widget 与弹窗两种接入方式。"
 version: 0.0.2-dev.0
 homepage: https://github.com/kjxbyz/dxcaptcha_flutter
 
@@ -24,4 +24,8 @@ flutter:
         package: com.kjxbyz.plugins.dxcaptcha_flutter
         pluginClass: DxcaptchaFlutterPlugin
       ios:
+        pluginClass: DxcaptchaFlutterPlugin
+      ohos:
+        # 鸿蒙实现：仓库根 ohos/ 目录（与 android/、ios/ 平级）的 ArkTS 模块，
+        # 平台视图通道协议与 Android 一致，Dart 侧复用 AndroidView。
         pluginClass: DxcaptchaFlutterPlugin

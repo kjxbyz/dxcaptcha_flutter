@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
@@ -20,13 +22,28 @@ class MethodChannelDxCaptcha extends DxCaptchaPlatform {
 
   @override
   Widget buildView(DxCaptchaViewParams params) {
+    // OpenHarmony 适配版 Flutter（Flutter-OH）下，平台视图通道协议与
+    // Android 完全一致（create / touch / dispose 消息同构，direction 编码
+    // 相同），因此直接复用 AndroidView。标准 Flutter SDK 中
+    // Platform.operatingSystem 不会返回 'ohos'，该分支永不命中。
+    if (Platform.operatingSystem == 'ohos') {
+      return AndroidView(
+        viewType: viewType,
+        creationParams: params.config.toMap(),
+        creationParamsCodec: const StandardMessageCodec(),
+        onPlatformViewCreated: (int id) => bindView(id, params),
+        gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+          Factory<OneSequenceGestureRecognizer>(EagerGestureRecognizer.new),
+        },
+      );
+    }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return AndroidView(
           viewType: viewType,
           creationParams: params.config.toMap(),
           creationParamsCodec: const StandardMessageCodec(),
-          onPlatformViewCreated: (int id) => _bind(id, params),
+          onPlatformViewCreated: (int id) => bindView(id, params),
           gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
             Factory<OneSequenceGestureRecognizer>(EagerGestureRecognizer.new),
           },
@@ -36,7 +53,7 @@ class MethodChannelDxCaptcha extends DxCaptchaPlatform {
           viewType: viewType,
           creationParams: params.config.toMap(),
           creationParamsCodec: const StandardMessageCodec(),
-          onPlatformViewCreated: (int id) => _bind(id, params),
+          onPlatformViewCreated: (int id) => bindView(id, params),
           gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
             Factory<OneSequenceGestureRecognizer>(EagerGestureRecognizer.new),
           },
@@ -49,7 +66,7 @@ class MethodChannelDxCaptcha extends DxCaptchaPlatform {
     }
   }
 
-  void _bind(int viewId, DxCaptchaViewParams params) {
+  void bindView(int viewId, DxCaptchaViewParams params) {
     final MethodChannel channel = MethodChannel('$channelPrefix$viewId');
 
     channel.setMethodCallHandler((MethodCall call) async {
@@ -142,7 +159,7 @@ class _UnsupportedPlatformView extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.all(12),
             child: Text(
-              '顶象验证码暂不支持当前平台，请使用 iOS / Android。',
+              '顶象验证码暂不支持当前平台，请使用 iOS / Android / OpenHarmony。',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 12, color: Color(0xFF8A8A8A)),
             ),

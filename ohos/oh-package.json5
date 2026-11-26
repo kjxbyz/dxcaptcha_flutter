@@ -1,0 +1,12 @@
+{
+  "name": "dxcaptcha_flutter",
+  "version": "0.0.2",
+  "description": "dxcaptcha_flutter 插件的 OpenHarmony 平台实现（顶象验证码 SDK 桥接）。",
+  "main": "index.ets",
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@ohos/flutter_ohos": "file:libs/flutter.har",
+    "dx.captcha": "file:libs/dx-captcha.har"
+  }
+}

@@ -2,13 +2,13 @@
 
 [English](README.md) | **简体中文**
 
-顶象无感验证码（DingXiang Captcha）Flutter 插件，支持 **iOS / Android**，
-提供 **嵌入组件** 与 **全屏弹窗** 两种接入方式，两端共用一套 Dart API。
+顶象无感验证码（DingXiang Captcha）Flutter 插件，支持 **iOS / Android / OpenHarmony（鸿蒙）**，
+提供 **嵌入组件** 与 **全屏弹窗** 两种接入方式，共用一套 Dart API。
 
 - 统一的 `DxCaptcha` 组件，直接放进 Widget 树即可渲染验证码
 - `DxCaptcha.show(context)` 一行代码弹出验证，返回结构化结果
 - `DxCaptchaController` 管理状态、失败重试、读取 token
-- 事件归一化：iOS / Android 的事件名差异由插件内部抹平
+- 事件归一化：iOS / Android / OpenHarmony 的事件名差异由插件内部抹平
 - 内置加载/错误占位、中文/英文界面、私有化部署参数透传
 
 ## 平台支持
@@ -66,6 +66,45 @@ ios/Frameworks/DXCaptcha.bundle         # 验证码前端资源（缺失会白�
 使用 `use_frameworks!` 时资源会打包进 `dxcaptcha_flutter.framework`，若真机验证
 出现空白（验证码区域全白），把 `DXCaptcha.bundle` 额外加入 Runner target 的
 **Copy Bundle Resources**。
+
+### OpenHarmony（鸿蒙）
+
+鸿蒙实现与 iOS / Android 一样内置于插件本体的 `ohos/` 平台目录
+（目录结构与 [CPF-Flutter 社区适配仓库](https://gitcode.com/CPF-Flutter)一致），
+Dart API（嵌入组件 + 弹窗模式）与 Android / iOS 完全一致：
+
+```
+dxcaptcha_flutter/
+├── android/                              # Android 平台实现
+├── ios/                                  # iOS 平台实现
+└── ohos/                                 # 鸿蒙平台实现（ArkTS 模块，har）
+    ├── index.ets                         # 模块入口
+    ├── oh-package.json5                  # 模块依赖（@ohos/flutter_ohos、dx.captcha）
+    ├── libs/dx-captcha.har               # 顶象鸿蒙 SDK v5.4.18r（已内置）
+    └── src/main/
+        ├── module.json5                  # har 模块声明（含 INTERNET 权限）
+        └── ets/components/plugin/
+            ├── DxcaptchaFlutterPlugin.ets   # 插件入口 + PlatformView 工厂
+            └── DxCaptchaPlatformView.ets    # PlatformView + CaptchaViewV5 桥接
+```
+
+鸿蒙构建需使用 OpenHarmony 适配版 Flutter 工具链
+（[Flutter-OH](https://gitcode.com/openharmony-sig/flutter_flutter)），
+主包 pubspec 已声明 `platforms.ohos.pluginClass`，工具链在构建 ohos 目标时
+自动注册插件，宿主工程**无需额外配置**。ohos 平台视图通道协议与 Android
+一致，Dart 侧统一走 `AndroidView`，无需条件编译。
+
+说明：
+
+- `ohos/libs/flutter.har` 由 Flutter-OH 工具链在构建宿主工程时自动复制，
+  无需手动提供（已加入 `.gitignore`）。
+- 插件 har 的 `module.json5` 已声明 `ohos.permission.INTERNET`。
+- 顶象鸿蒙 SDK < v5.4.21 时 `protocol` 参数必填，插件已默认注入 `https:`，
+  可通过 `extra: {'protocol': ...}` 覆盖。
+- 示例工程运行：在 Flutter-OH 环境下执行
+  `cd example && flutter create . --platforms ohos` 生成 `example/ohos`
+  宿主工程，然后用 DevEco Studio 配置签名后 `flutter run -d <deviceId>`，
+  或直接 `flutter build hap --release` 构建产物。
 
 ### Android
 
@@ -263,6 +302,13 @@ v5.4.21 时该参数必填，缺失时 SDK 可能按 `http` 请求资源被 ATS 
 
 **iOS 链接报 `Undefined symbol: _OBJC_CLASS_$_DXCaptchaViewV5`**
 见上文「符号链接插件的路径问题」。
+
+**OpenHarmony 构建或运行问题**
+- 鸿蒙支持需使用 Flutter-OH 适配版工具链，标准 Flutter SDK 无法构建 hap；
+- 运行时白屏或加载失败：确认设备网络可访问顶象服务，检查 `apiServer` 配置；
+  插件已自动注入 `protocol: https:`，私有化部署可通过 `extra` 覆盖；
+- 真机调试请在 DevEco Studio 中打开 `example/ohos`（先执行
+  `flutter create . --platforms ohos` 生成）并配置签名。
 
 ## License
 

@@ -1,0 +1,18 @@
+{
+  "module": {
+    "name": "dxcaptcha_flutter",
+    "type": "har",
+    "deviceTypes": [
+      "default",
+      "tablet"
+    ],
+    "requestPermissions": [
+      {
+        "name": "ohos.permission.INTERNET",
+        "usedScene": {
+          "when": "always"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+# OpenHarmony 构建产物与工具链自动生成的文件，勿提交。
+build/
+local.properties
+.cxx/
+.test/
+.preview/
+.idea/
+# flutter.har 由 Flutter-OH 工具链在构建宿主工程时自动复制到本目录。
+libs/flutter.har
+libs/.ohpm/
+# hvigor/DevEco 生成
+BuildProfile.ets
+oh-package-lock.json5
+oh_modules/
+node_modules/

@@ -2,9 +2,10 @@
 
 **English** | [简体中文](README_ZH.md)
 
-A Flutter plugin for DingXiang (顶象) CAPTCHA, supporting **iOS / Android**.
+A Flutter plugin for DingXiang (顶象) CAPTCHA, supporting **iOS / Android /
+OpenHarmony (HarmonyOS NEXT)**.
 It ships both an **embedded widget** and a **full-screen dialog**, sharing a single
-Dart API across both platforms.
+Dart API across all platforms.
 
 - `DxCaptcha` — a single widget you can drop into your tree to render the CAPTCHA
 - `DxCaptcha.show(context)` — one line to present the CAPTCHA in a dialog, returning a
@@ -68,6 +69,48 @@ ios/Frameworks/DXCaptcha.bundle         # CAPTCHA front-end assets (missing => b
 When `use_frameworks!` is enabled the assets are bundled inside `dxcaptcha_flutter.framework`.
 If the CAPTCHA area renders blank on a real device, add `DXCaptcha.bundle` to the Runner
 target's **Copy Bundle Resources** as well.
+
+### OpenHarmony
+
+The OpenHarmony implementation lives in the plugin's own `ohos/` platform
+directory, just like `android/` and `ios/` (matching the
+[CPF-Flutter community adaptation repos](https://gitcode.com/CPF-Flutter)).
+The Dart API (embedded widget + dialog mode) is identical to Android / iOS:
+
+```
+dxcaptcha_flutter/
+├── android/                              # Android platform implementation
+├── ios/                                  # iOS platform implementation
+└── ohos/                                 # OpenHarmony implementation (ArkTS module, har)
+    ├── index.ets                         # Module entry
+    ├── oh-package.json5                  # Module deps (@ohos/flutter_ohos, dx.captcha)
+    ├── libs/dx-captcha.har               # DingXiang HarmonyOS SDK v5.4.18r (bundled)
+    └── src/main/
+        ├── module.json5                  # har module declaration (INTERNET permission)
+        └── ets/components/plugin/
+            ├── DxcaptchaFlutterPlugin.ets   # Plugin entry + PlatformView factory
+            └── DxCaptchaPlatformView.ets    # PlatformView + CaptchaViewV5 bridge
+```
+
+Building for ohos requires the OpenHarmony-adapted Flutter toolchain
+([Flutter-OH](https://gitcode.com/openharmony-sig/flutter_flutter)). The main
+package pubspec already declares `platforms.ohos.pluginClass`, so the toolchain
+registers the plugin automatically when building for ohos — **no extra
+configuration is required in host apps**. The ohos platform-view channel
+protocol is identical to Android's, so the Dart side shares the same
+`AndroidView` path with no conditional compilation.
+
+Notes:
+
+- `ohos/libs/flutter.har` is copied automatically by the Flutter-OH toolchain
+  when the host project is built — it is `.gitignore`d and must not be committed.
+- The plugin har already declares the `ohos.permission.INTERNET` permission.
+- `protocol` is required for DingXiang SDK versions below v5.4.21; the plugin
+  injects `https:` by default and it can be overridden via `extra`.
+- To run the example app: under the Flutter-OH environment, run
+  `cd example && flutter create . --platforms ohos` to generate the
+  `example/ohos` host project, configure signing in DevEco Studio, then
+  `flutter run -d <deviceId>` or `flutter build hap --release`.
 
 ### Android
 
@@ -278,6 +321,16 @@ SDK may request resources over `http`, which gets blocked by ATS. The plugin inj
 
 **iOS linker error `Undefined symbol: _OBJC_CLASS_$_DXCaptchaViewV5`**
 See "Path issue with symlinked plugins" above.
+
+**OpenHarmony build or runtime issues**
+- Building for ohos requires the Flutter-OH adapted toolchain; the standard
+  Flutter SDK cannot produce hap packages;
+- Blank view or load failure on device: make sure the device can reach the
+  DingXiang endpoints and check the `apiServer` config. The plugin injects
+  `protocol: https:` automatically; override it via `extra` for private
+  deployments;
+- For on-device debugging, open `example/ohos` in DevEco Studio (generate it
+  first with `flutter create . --platforms ohos`) and set up signing.
 
 ## License
 
